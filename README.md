@@ -6,7 +6,7 @@ Terraform's provider for setup network interface and keepalived vrrp_instance on
 Compile:
 ========
 
-export GO111MODULE=on
+export GO111MODULE=on  
 go build -o terraform-provider-lvsnetwork && mv terraform-provider-lvsnetwork /usr/bin/
 
 Config:
@@ -55,23 +55,25 @@ resource lvsnetwork_ifacevrrp "vlan471" {
 }
 ```
 * **iface** : (Required) name of interface for iface configuration and vrrp configuration
-* **ip_vip** : (Optional) [ Def : [""]] list of IPv4 in vrrp configuration
 * **ip_master** : (Optional) [ Def : "" ] IPv4 for iface configuration on master server
 * **ip_slave** : (Optional) [ Def : "" ] IPv4 for iface configuration on slave server
 * **mask** : (Optional) [ Def : "" ] short netmask for iface configuration on master/slave server
+* **vlan_device** : (Optional) [ Computed : bond1 (if iface ~= vlan) ] vlan-raw-device for iface configuration
+* **post_up** : (Optional) [ Def : [""] ] list of post-up line for iface configuration
+* **default_gw** : (Optional) [ Def : "" ] default gateway, gateway parameter in iface configuration
+* **lacp_slaves** : (Optional) [ Def : "" ] 802.3ad configuration with slaves ifaces
+* **lacp_slaves_slave** : (Optional) [ Def : "" ] 802.3ad configuration with slaves ifaces for backup router only if different on master router
+
 * **ip_vip_only** : (Optional) [ Def : false ] only configure vrrp
+
+* **ip_vip** : (Optional) [ Def : [""]] list of IPv4 in vrrp configuration
 * **prio_master** : (Optional) [ Computed : 150] priority for vrrp configuration on master server
 * **prio_slave** : (Optional) [ Computed : 100] priority for vrrp configuration on slave server
-* **vlan_device** : (Optional) [ Computed : bond1 (if iface ~= vlan) ] vlan-raw-device for iface configuration
 * **vrrp_group** : (Optional) [ Computed : "VG_1" ] vrrp_sync_group for vrrp configuration
 * **iface_vrrp** : (Optional) [ Def : "" ] interface for vrrp configuration (default same as iface)
 * **id_vrrp** : (Optional) [ Computed : $default_id_vrrp from provider ] id for vrrp configuration (must be unique for iface)
 * **auth_type** : (Optional) [ Computed : "PASS" ] authentication auth_type
 * **auth_pass** : (Optional) [ Computed : "word" ] authentication auth_pass
-* **post_up** : (Optional) [ Def : [""] ] list of post-up line for iface configuration
-* **default_gw** : (Optional) [ Def : "" ] default gateway, gateway parameter in iface configuration
-* **lacp_slaves** : (Optional) [ Def : "" ] 802.3ad configuration with slaves ifaces
-* **lacp_slaves_slave** : (Optional) [ Def : "" ] 802.3ad configuration with slaves ifaces for backup router only if different on master router
 * **sync_iface** : (Optional) [ Def : "" ] lvs_sync_daemon_interface parameter for vrrp configuration (must be unique on server)
 * **garp_m_delay** : (Optional) [ Computed : 5 ] garp_master_delay parameter for vrrp configuration
 * **advert_int** : (Optional) [ Computed : 1 ] advert_int parameter for vrrp configuration
