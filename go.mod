@@ -8,3 +8,5 @@ require (
 	github.com/pierrec/lz4 v2.0.5+incompatible // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 )
+
+replace git.apache.org/thrift.git => github.com/apache/thrift v0.12.0
