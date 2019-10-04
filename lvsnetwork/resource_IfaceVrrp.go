@@ -471,7 +471,6 @@ func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 		setVrrpConfig(d, m)
-
 	}
 	if d.HasChange("ip_vip_only") {
 		if !d.Get("ip_vip_only").(bool) {

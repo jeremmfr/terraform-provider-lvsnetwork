@@ -52,7 +52,8 @@ type ifaceVrrp struct {
 }
 
 // NewClient configure
-func NewClient(firewallIP string, firewallPortAPI int, https bool, insecure bool, logname string, login string, password string, defaultIDVrrp int, defaultVrrpGroup string, defaultAdvertInt int) *Client {
+func NewClient(firewallIP string, firewallPortAPI int, https bool, insecure bool, logname string,
+	login string, password string, defaultIDVrrp int, defaultVrrpGroup string, defaultAdvertInt int) *Client {
 	client := &Client{
 		FirewallIP:       firewallIP,
 		Port:             firewallPortAPI,

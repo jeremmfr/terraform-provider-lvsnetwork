@@ -27,10 +27,12 @@ type Config struct {
 func (c *Config) Client() (*Client, error) {
 	var client *Client
 	if !c.vaultEnable {
-		client = NewClient(c.firewallIP, c.firewallPortAPI, c.https, c.insecure, c.logname, c.login, c.password, c.defaultIDVrrp, c.defaultVrrpGroup, c.defaultAdvertInt)
+		client = NewClient(c.firewallIP, c.firewallPortAPI, c.https, c.insecure, c.logname,
+			c.login, c.password, c.defaultIDVrrp, c.defaultVrrpGroup, c.defaultAdvertInt)
 	} else {
 		login, password := getloginVault(c.vaultPath, c.firewallIP, c.vaultKey)
-		client = NewClient(c.firewallIP, c.firewallPortAPI, c.https, c.insecure, c.logname, login, password, c.defaultIDVrrp, c.defaultVrrpGroup, c.defaultAdvertInt)
+		client = NewClient(c.firewallIP, c.firewallPortAPI, c.https, c.insecure, c.logname,
+			login, password, c.defaultIDVrrp, c.defaultVrrpGroup, c.defaultAdvertInt)
 	}
 
 	return client, nil
