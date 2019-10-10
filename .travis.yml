@@ -9,3 +9,16 @@ before_script:
 script:
   - go test -v ./...
   - golangci-lint run
+
+before_deploy:
+  - export REPO_NAME=$(echo $TRAVIS_REPO_SLUG | cut -d'/' -f2)
+  - go build -o ${REPO_NAME}_${TRAVIS_TAG}
+  - tar -czvf ${REPO_NAME}_${TRAVIS_TAG}_linux_amd64.tar.gz ${REPO_NAME}_${TRAVIS_TAG}
+deploy:
+  provider: releases
+  api_key:
+    secure: "b0Tzd8LeLy9aIf6VMWfsuZGwmmbewJa9hplCAHpcELIAT3qxGx1rVU5Z7jPcJ0UCbMrK21hnd6mxC5gIGI8+biFMOYhFki1ZIlbk1FaW4uqKyZgM3Y6JgamZdkIo6IMKpVJ8n37ihL9sOhyoCVr9Z92vmTbEUUi7HwrCs1vdyrUsKGoW1nQUdQz4NH+zEU6fK4wUdffZ7kA83/bVjieU4iW8Iz7DSrGjPULIDfvssSQwcIwCOZ6UFAlVf92m5dy8Y8Y6sYJTpCn7mux6FFw7YgmHQRhB4cqHkjz5bnUXrNbXnLUPhVSPYKXymVNnYVOpDhDzEtNqs9KstIrma/CUezy/w5EOniKqqDdDgLis6rcGum93Vj6vkIXHhlj1u7P5TnE2aCfW4Qh70TfEP/qVwmLODjDtBAyXxNhj/0oLh/wKeFOK+hsd793+r/1+JHNImd8vuy7960Ckm3UTWts0gSKoEeX96gTAZAzUi/ofW0wkUBucd8PZwo5aAyoTmiwy1xnW/zzajkuuJtFYiPrXXkJwZ/SirdzoWA2ImYDm91ga67uBaev3ZwlqU9oarBktBiCIVcJgJepBKw7HmWBLcBx2l+nCOSxOm+vqRDKwbRT+oL/cWWnRqzpdR/CRyXbz6XQ+320F+6N8NTql3EW3u+CLDxTlSmovTEK7IjSglu8="
+  file: ${REPO_NAME}_${TRAVIS_TAG}_linux_amd64.tar.gz
+  skip_cleanup: true
+  on:
+    tags: true
