@@ -2,10 +2,14 @@ linters:
   enable-all: true
   disable:
     - funlen
+    - wsl
 linters-settings:
   gocyclo:
     # minimal code complexity to report, 30 by default
     min-complexity: 70
+  gocognit:
+    # minimal code complexity to report, 30 by default
+    min-complexity: 120
 issues:
   exclude-rules:
     - text: "TLS InsecureSkipVerify set true"

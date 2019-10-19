@@ -14,16 +14,17 @@ import (
 
 // Client = provider configuration
 type Client struct {
-	HTTPS            bool
-	Insecure         bool
-	DefaultIDVrrp    int
-	DefaultAdvertInt int
-	Port             int
-	DefaultVrrpGroup string
-	FirewallIP       string
-	Logname          string
-	Login            string
-	Password         string
+	HTTPS              bool
+	Insecure           bool
+	DefaultIDVrrp      int
+	DefaultAdvertInt   int
+	Port               int
+	DefaultVrrpGroup   string
+	FirewallIP         string
+	Logname            string
+	Login              string
+	Password           string
+	DefaultTrackScript []string
 }
 type ifaceVrrp struct {
 	IPVipOnly         bool     `json:"IP_vip_only"`
@@ -49,22 +50,37 @@ type ifaceVrrp struct {
 	GarpMasterRefresh string   `json:"Garp_master_refresh"`
 	IPVip             []string `json:"IP_vip"`
 	PostUp            []string `json:"Post_up"`
+	TrackScript       []string `json:"track_script"`
+}
+type vrrpScript struct {
+	InitFail      bool   `json:"init_fail"`
+	WeightReverse bool   `json:"weight_reverse"`
+	Fall          int    `json:"fall"`
+	Interval      int    `json:"interval"`
+	Rise          int    `json:"rise"`
+	Timeout       int    `json:"timeout"`
+	Weight        int    `json:"weight"`
+	Name          string `json:"name"`
+	Script        string `json:"script"`
+	User          string `json:"user"`
 }
 
 // NewClient configure
 func NewClient(firewallIP string, firewallPortAPI int, https bool, insecure bool, logname string,
-	login string, password string, defaultIDVrrp int, defaultVrrpGroup string, defaultAdvertInt int) *Client {
+	login string, password string, defaultIDVrrp int, defaultVrrpGroup string, defaultAdvertInt int,
+	defaultTrackSCript []string) *Client {
 	client := &Client{
-		FirewallIP:       firewallIP,
-		Port:             firewallPortAPI,
-		HTTPS:            https,
-		Insecure:         insecure,
-		Logname:          logname,
-		Login:            login,
-		Password:         password,
-		DefaultIDVrrp:    defaultIDVrrp,
-		DefaultVrrpGroup: defaultVrrpGroup,
-		DefaultAdvertInt: defaultAdvertInt,
+		FirewallIP:         firewallIP,
+		Port:               firewallPortAPI,
+		HTTPS:              https,
+		Insecure:           insecure,
+		Logname:            logname,
+		Login:              login,
+		Password:           password,
+		DefaultIDVrrp:      defaultIDVrrp,
+		DefaultVrrpGroup:   defaultVrrpGroup,
+		DefaultAdvertInt:   defaultAdvertInt,
+		DefaultTrackScript: defaultTrackSCript,
 	}
 	return client
 }
@@ -84,14 +100,19 @@ func (client *Client) getDefaultAdvertInt() int {
 	return client.DefaultAdvertInt
 }
 
+// getDefaultTrackScript : get provider config for computed track_script
+func (client *Client) getDefaultTrackScript() []string {
+	return client.DefaultTrackScript
+}
+
 // newRequest : call API
-func (client *Client) newRequest(uri string, ifaceVrrpReq *ifaceVrrp) (int, string, error) {
+func (client *Client) newRequest(uri string, jsonBody interface{}) (int, string, error) {
 	urlString := "http://" + client.FirewallIP + ":" + strconv.Itoa(client.Port) + uri + "?&logname=" + client.Logname
 	if client.HTTPS {
 		urlString = strings.Replace(urlString, "http://", "https://", -1)
 	}
 	body := new(bytes.Buffer)
-	err := json.NewEncoder(body).Encode(ifaceVrrpReq)
+	err := json.NewEncoder(body).Encode(jsonBody)
 	if err != nil {
 		return 500, "", err
 	}
@@ -127,8 +148,8 @@ func (client *Client) newRequest(uri string, ifaceVrrpReq *ifaceVrrp) (int, stri
 	return resp.StatusCode, string(respBody), nil
 }
 
-// requestAPI : prepare request to API and call api with newRequest()
-func (client *Client) requestAPI(action string, ifaceVrrpReq *ifaceVrrp) (ifaceVrrp, error) {
+// requestAPIIFaceVrrp : prepare request to API for resource ifacevrrp and call api with newRequest()
+func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp) (ifaceVrrp, error) {
 	var ifaceVrrpReturn ifaceVrrp
 	switch action {
 	case "ADD":
@@ -195,7 +216,7 @@ func (client *Client) requestAPI(action string, ifaceVrrpReq *ifaceVrrp) (ifaceV
 }
 
 // requestAPIMove : call /moveid_iface_vrrp/ on api
-func (client *Client) requestAPIMove(ifaceVrrpReq *ifaceVrrp, oldID int) error {
+func (client *Client) requestAPIIFaceVrrpMove(ifaceVrrpReq *ifaceVrrp, oldID int) error {
 	uriString := "/moveid_iface_vrrp/" + ifaceVrrpReq.Iface + "/" + strconv.Itoa(oldID) + "/"
 	statuscode, body, err := client.newRequest(uriString, ifaceVrrpReq)
 	if err != nil {
@@ -208,4 +229,72 @@ func (client *Client) requestAPIMove(ifaceVrrpReq *ifaceVrrp, oldID int) error {
 		return fmt.Errorf(body)
 	}
 	return nil
+}
+
+// requestAPIVrrpScript : prepare request to API for resource vrpp_script and call api with newRequest()
+func (client *Client) requestAPIVrrpScript(action string, vrrpScriptReq *vrrpScript) (vrrpScript, error) {
+	var vrrpScriptReturn vrrpScript
+	switch action {
+	case "ADD":
+		uriString := "/add_vrrp_script/" + vrrpScriptReq.Name + "/"
+		statuscode, body, err := client.newRequest(uriString, vrrpScriptReq)
+		if err != nil {
+			return vrrpScriptReturn, err
+		}
+		if statuscode == 401 {
+			return vrrpScriptReturn, fmt.Errorf("you are Unauthorized")
+		}
+		if statuscode != 200 {
+			return vrrpScriptReturn, fmt.Errorf(body)
+		}
+		return vrrpScriptReturn, nil
+	case "REMOVE":
+		uriString := "/remove_vrrp_script/" + vrrpScriptReq.Name + "/"
+		statuscode, body, err := client.newRequest(uriString, vrrpScriptReq)
+		if err != nil {
+			return vrrpScriptReturn, err
+		}
+		if statuscode == 401 {
+			return vrrpScriptReturn, fmt.Errorf("you are Unauthorized")
+		}
+		if statuscode != 200 {
+			return vrrpScriptReturn, fmt.Errorf(body)
+		}
+		return vrrpScriptReturn, nil
+	case "CHECK":
+		uriString := "/check_vrrp_script/" + vrrpScriptReq.Name + "/"
+		statuscode, body, err := client.newRequest(uriString, vrrpScriptReq)
+		if err != nil {
+			return vrrpScriptReturn, err
+		}
+		if statuscode == 401 {
+			return vrrpScriptReturn, fmt.Errorf("you are Unauthorized")
+		}
+		if statuscode == 404 {
+			return vrrpScriptReturn, nil
+		}
+		if statuscode == 500 {
+			return vrrpScriptReturn, fmt.Errorf("[ERROR] 500 %s", body)
+		}
+		errDecode := json.Unmarshal([]byte(body), &vrrpScriptReturn)
+		if errDecode != nil {
+			return vrrpScriptReturn, fmt.Errorf("[ERROR] decode json API response (%v) %v", errDecode, body)
+		}
+		return vrrpScriptReturn, nil
+	case "CHANGE":
+		uriString := "/change_vrrp_script/" + vrrpScriptReq.Name + "/"
+		statuscode, body, err := client.newRequest(uriString, vrrpScriptReq)
+		if err != nil {
+			return vrrpScriptReturn, err
+		}
+		if statuscode == 401 {
+			return vrrpScriptReturn, fmt.Errorf("you are Unauthorized")
+		}
+		if statuscode != 200 {
+			return vrrpScriptReturn, fmt.Errorf(body)
+		}
+		return vrrpScriptReturn, nil
+	default:
+		return vrrpScriptReturn, fmt.Errorf("internal error => unknown action for requestAPI")
+	}
 }

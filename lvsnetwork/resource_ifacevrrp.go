@@ -20,6 +20,7 @@ func resourceIfaceVrrp() *schema.Resource {
 			"iface": {
 				Type:     schema.TypeString,
 				Required: true,
+				ForceNew: true,
 			},
 			"ip_vip": {
 				Type:     schema.TypeList,
@@ -33,6 +34,7 @@ func resourceIfaceVrrp() *schema.Resource {
 			"ip_master": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(string)
 					testInput := net.ParseIP(value)
@@ -45,6 +47,7 @@ func resourceIfaceVrrp() *schema.Resource {
 			"ip_slave": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(string)
 					testInput := net.ParseIP(value)
@@ -57,6 +60,7 @@ func resourceIfaceVrrp() *schema.Resource {
 			"mask": {
 				Type:     schema.TypeInt,
 				Optional: true,
+				ForceNew: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(int)
 					if value < 8 || value > 127 {
@@ -93,6 +97,7 @@ func resourceIfaceVrrp() *schema.Resource {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"vrrp_group": {
 				Type:     schema.TypeString,
@@ -147,6 +152,7 @@ func resourceIfaceVrrp() *schema.Resource {
 			"default_gw": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(string)
 					testInput := net.ParseIP(value)
@@ -159,11 +165,13 @@ func resourceIfaceVrrp() *schema.Resource {
 			"lacp_slaves": {
 				Type:     schema.TypeString,
 				Optional: true,
+				ForceNew: true,
 			},
 			"lacp_slaves_slave": {
 				Type:     schema.TypeString,
 				Optional: true,
 				Computed: true,
+				ForceNew: true,
 			},
 			"sync_iface": {
 				Type:     schema.TypeString,
@@ -210,6 +218,12 @@ func resourceIfaceVrrp() *schema.Resource {
 				Optional: true,
 				Default:  true,
 			},
+			"track_script": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+				Computed: true,
+			},
 		},
 	}
 }
@@ -249,7 +263,7 @@ func resourceIfaceVrrpCreate(d *schema.ResourceData, m interface{}) error {
 		}
 	}
 	IfaceVrrp := createStrucIfaceVrrp(d)
-	_, err := client.requestAPI("ADD", &IfaceVrrp)
+	_, err := client.requestAPIIFaceVrrp("ADD", &IfaceVrrp)
 	if err != nil {
 		return err
 	}
@@ -263,7 +277,7 @@ func resourceIfaceVrrpCreate(d *schema.ResourceData, m interface{}) error {
 func resourceIfaceVrrpRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 	IfaceVrrp := createStrucIfaceVrrp(d)
-	IfaceVrrpRead, err := client.requestAPI("CHECK", &IfaceVrrp)
+	IfaceVrrpRead, err := client.requestAPIIFaceVrrp("CHECK", &IfaceVrrp)
 	if err != nil {
 		return err
 	}
@@ -364,6 +378,10 @@ func resourceIfaceVrrpRead(d *schema.ResourceData, m interface{}) error {
 		if tfErr != nil {
 			panic(tfErr)
 		}
+		tfErr = d.Set("track_script", []string{})
+		if tfErr != nil {
+			panic(tfErr)
+		}
 		_, exists := d.GetOk("sync_iface")
 		if exists {
 			tfErr = d.Set("sync_iface", "")
@@ -401,6 +419,10 @@ func resourceIfaceVrrpRead(d *schema.ResourceData, m interface{}) error {
 		if tfErr != nil {
 			panic(tfErr)
 		}
+		tfErr = d.Set("track_script", []string{})
+		if tfErr != nil {
+			panic(tfErr)
+		}
 		_, exists := d.GetOk("sync_iface")
 		if exists {
 			tfErr = d.Set("sync_iface", "")
@@ -420,51 +442,6 @@ func resourceIfaceVrrpRead(d *schema.ResourceData, m interface{}) error {
 func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 	d.Partial(true)
-	if d.HasChange("iface") {
-		return fmt.Errorf("[ERROR] you can't change iface")
-	}
-	if d.HasChange("ip_master") {
-		o, _ := d.GetChange("ip_master")
-		if o.(string) != "" {
-			return fmt.Errorf("[ERROR] you can't change ip_master")
-		}
-	}
-	if d.HasChange("ip_slave") {
-		o, _ := d.GetChange("ip_slave")
-		if o.(string) != "" {
-			return fmt.Errorf("[ERROR] you can't change ip_slave")
-		}
-	}
-	if d.HasChange("mask") {
-		o, _ := d.GetChange("mask")
-		if o.(int) != 0 {
-			return fmt.Errorf("[ERROR] you can't change mask")
-		}
-	}
-	if d.HasChange("default_gw") {
-		o, _ := d.GetChange("default_gw")
-		if o.(string) != "" {
-			return fmt.Errorf("[ERROR] you can't change default_gw")
-		}
-	}
-	if d.HasChange("lacp_slaves") {
-		o, _ := d.GetChange("lacp_slaves")
-		if o.(string) != "" {
-			return fmt.Errorf("[ERROR] you can't change lacp_slaves")
-		}
-	}
-	if d.HasChange("lacp_slaves_slave") {
-		o, _ := d.GetChange("lacp_slaves_slave")
-		if o.(string) != "" {
-			return fmt.Errorf("[ERROR] you can't change lacp_slaves_slave")
-		}
-	}
-	if d.HasChange("vlan_device") {
-		o, _ := d.GetChange("vlan_device")
-		if o.(string) != "" {
-			return fmt.Errorf("[ERROR] you can't change vlan_device")
-		}
-	}
 	if len(d.Get("ip_vip").([]interface{})) != 0 {
 		err := validateIPList(d)
 		if err != nil {
@@ -543,12 +520,12 @@ func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
 	if (len(d.Get("ip_vip").([]interface{})) != 0) && (d.HasChange("id_vrrp") || d.HasChange("iface_vrrp")) {
 		oldID, newID := d.GetChange("id_vrrp")
 		if oldID.(int) != 0 {
-			err := client.requestAPIMove(&IfaceVrrp, oldID.(int))
+			err := client.requestAPIIFaceVrrpMove(&IfaceVrrp, oldID.(int))
 			if err != nil {
 				return err
 			}
 		} else {
-			err := client.requestAPIMove(&IfaceVrrp, newID.(int))
+			err := client.requestAPIIFaceVrrpMove(&IfaceVrrp, newID.(int))
 			if err != nil {
 				return err
 			}
@@ -557,7 +534,7 @@ func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
 		d.SetPartial("id_vrrp")
 		d.SetPartial("sync_iface")
 	}
-	_, err := client.requestAPI("CHANGE", &IfaceVrrp)
+	_, err := client.requestAPIIFaceVrrp("CHANGE", &IfaceVrrp)
 	if err != nil {
 		return err
 	}
@@ -598,6 +575,10 @@ func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
 		if tfErr != nil {
 			panic(tfErr)
 		}
+		tfErr = d.Set("track_script", []string{})
+		if tfErr != nil {
+			panic(tfErr)
+		}
 		d.SetId(d.Get("iface").(string) + "_0")
 	}
 	d.Partial(false)
@@ -606,7 +587,7 @@ func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
 func resourceIfaceVrrpDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 	IfaceVrrp := createStrucIfaceVrrp(d)
-	_, err := client.requestAPI("REMOVE", &IfaceVrrp)
+	_, err := client.requestAPIIFaceVrrp("REMOVE", &IfaceVrrp)
 	if err != nil {
 		return err
 	}
@@ -649,6 +630,10 @@ func createStrucIfaceVrrp(d *schema.ResourceData) ifaceVrrp {
 	GarpMDelay := strconv.Itoa(d.Get("garp_m_delay").(int))
 	AdvertInt := strconv.Itoa(d.Get("advert_int").(int))
 	GarpMasterRefresh := strconv.Itoa(d.Get("garp_master_refresh").(int))
+	TrackScript := make([]string, 0)
+	for _, elem := range d.Get("track_script").([]interface{}) {
+		TrackScript = append(TrackScript, elem.(string))
+	}
 
 	IfaceVrrp := ifaceVrrp{
 		Iface:             d.Get("iface").(string),
@@ -674,6 +659,7 @@ func createStrucIfaceVrrp(d *schema.ResourceData) ifaceVrrp {
 		AdvertInt:         AdvertInt,
 		GarpMasterRefresh: GarpMasterRefresh,
 		UseVmac:           d.Get("use_vmac").(bool),
+		TrackScript:       TrackScript,
 	}
 	return IfaceVrrp
 }
@@ -731,6 +717,12 @@ func setVrrpConfig(d *schema.ResourceData, m interface{}) {
 	}
 	if d.Get("garp_master_refresh").(int) == 0 {
 		tfErr := d.Set("garp_master_refresh", 60)
+		if tfErr != nil {
+			panic(tfErr)
+		}
+	}
+	if len(d.Get("track_script").([]interface{})) == 0 {
+		tfErr := d.Set("track_script", client.getDefaultTrackScript())
 		if tfErr != nil {
 			panic(tfErr)
 		}

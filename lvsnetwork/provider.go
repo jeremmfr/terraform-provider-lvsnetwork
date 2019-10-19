@@ -83,29 +83,40 @@ func Provider() terraform.ResourceProvider {
 					return
 				},
 			},
+			"default_track_script": {
+				Type:     schema.TypeList,
+				Optional: true,
+				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
-			"lvsnetwork_ifacevrrp": resourceIfaceVrrp(),
+			"lvsnetwork_ifacevrrp":   resourceIfaceVrrp(),
+			"lvsnetwork_vrrp_script": resourceVrrpScript(),
 		},
 		ConfigureFunc: configureProvider,
 	}
 }
 
 func configureProvider(d *schema.ResourceData) (interface{}, error) {
+	defaultTrackScript := make([]string, 0)
+	for _, elem := range d.Get("default_track_script").([]interface{}) {
+		defaultTrackScript = append(defaultTrackScript, elem.(string))
+	}
 	config := Config{
-		firewallIP:       d.Get("firewall_ip").(string),
-		firewallPortAPI:  d.Get("port").(int),
-		https:            d.Get("https").(bool),
-		insecure:         d.Get("insecure").(bool),
-		logname:          os.Getenv("USER"),
-		login:            d.Get("login").(string),
-		password:         d.Get("password").(string),
-		vaultEnable:      d.Get("vault_enable").(bool),
-		vaultPath:        d.Get("vault_path").(string),
-		vaultKey:         d.Get("vault_key").(string),
-		defaultIDVrrp:    d.Get("default_id_vrrp").(int),
-		defaultVrrpGroup: d.Get("default_vrrp_group").(string),
-		defaultAdvertInt: d.Get("default_advert_int").(int),
+		firewallIP:         d.Get("firewall_ip").(string),
+		firewallPortAPI:    d.Get("port").(int),
+		https:              d.Get("https").(bool),
+		insecure:           d.Get("insecure").(bool),
+		logname:            os.Getenv("USER"),
+		login:              d.Get("login").(string),
+		password:           d.Get("password").(string),
+		vaultEnable:        d.Get("vault_enable").(bool),
+		vaultPath:          d.Get("vault_path").(string),
+		vaultKey:           d.Get("vault_key").(string),
+		defaultIDVrrp:      d.Get("default_id_vrrp").(int),
+		defaultVrrpGroup:   d.Get("default_vrrp_group").(string),
+		defaultAdvertInt:   d.Get("default_advert_int").(int),
+		defaultTrackScript: defaultTrackScript,
 	}
 	return config.Client()
 }
