@@ -9,7 +9,6 @@ Terraform's provider for setup network interface and keepalived vrrp_instance on
 Compile:
 ========
 
-export GO111MODULE=on  
 go build -o terraform-provider-lvsnetwork && mv terraform-provider-lvsnetwork /usr/bin/
 
 Config:
@@ -68,9 +67,7 @@ resource lvsnetwork_ifacevrrp "vlan471" {
 * **default_gw** : (Optional) [ Def : "" ] default gateway, gateway parameter in iface configuration
 * **lacp_slaves** : (Optional) [ Def : "" ] 802.3ad configuration with slaves ifaces
 * **lacp_slaves_slave** : (Optional) [ Def : "" ] 802.3ad configuration with slaves ifaces for backup router only if different on master router
-
 * **ip_vip_only** : (Optional) [ Def : false ] only configure vrrp
-
 * **ip_vip** : (Optional) [ Def : [""]] list of IPv4 in vrrp configuration
 * **prio_master** : (Optional) [ Computed : 150] priority for vrrp configuration on master server
 * **prio_slave** : (Optional) [ Computed : 100] priority for vrrp configuration on slave server
