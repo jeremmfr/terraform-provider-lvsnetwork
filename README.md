@@ -1,8 +1,9 @@
 # terraform-provider-lvsnetwork
 ![GitHub release (latest by date)](https://img.shields.io/github/v/release/jeremmfr/terraform-provider-lvsnetwork)
+[![Go Status](https://github.com/jeremmfr/terraform-provider-lvsnetwork/workflows/Go%20Tests/badge.svg)](https://github.com/jeremmfr/terraform-provider-lvsnetwork/actions)
+[![Lint Status](https://github.com/jeremmfr/terraform-provider-lvsnetwork/workflows/GolangCI-Lint/badge.svg)](https://github.com/jeremmfr/terraform-provider-lvsnetwork/actions)
 [![GoDoc](https://godoc.org/github.com/jeremmfr/terraform-provider-lvsnetwork?status.svg)](https://godoc.org/github.com/jeremmfr/terraform-provider-lvsnetwork)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jeremmfr/terraform-provider-lvsnetwork)](https://goreportcard.com/report/github.com/jeremmfr/terraform-provider-lvsnetwork)
-[![Build Status](https://travis-ci.org/jeremmfr/terraform-provider-lvsnetwork.svg?branch=master)](https://travis-ci.org/jeremmfr/terraform-provider-lvsnetwork)
 
 Terraform's provider for setup network interface and keepalived vrrp_instance on two server (master/slave) with lvsnetwork-api (https://github.com/jeremmfr/lvsnetwork-api)
 
