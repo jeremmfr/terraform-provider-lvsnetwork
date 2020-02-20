@@ -6,6 +6,11 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+const (
+	defaultVrrpScriptRise = 3
+	defaultVrrpScriptFall = 3
+)
+
 func resourceVrrpScript() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceVrrpScriptCreate,
@@ -41,11 +46,11 @@ func resourceVrrpScript() *schema.Resource {
 			},
 			"rise": {
 				Type:     schema.TypeInt,
-				Default:  3,
+				Default:  defaultVrrpScriptRise,
 				Optional: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(int)
-					if value < 1 {
+					if value <= 0 {
 						errors = append(errors, fmt.Errorf("[ERROR] %q must be positive integer", k))
 					}
 					return
@@ -53,11 +58,11 @@ func resourceVrrpScript() *schema.Resource {
 			},
 			"fall": {
 				Type:     schema.TypeInt,
-				Default:  3,
+				Default:  defaultVrrpScriptFall,
 				Optional: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(int)
-					if value < 1 {
+					if value <= 0 {
 						errors = append(errors, fmt.Errorf("[ERROR] %q must be positive integer", k))
 					}
 					return

@@ -114,7 +114,7 @@ func (client *Client) newRequest(uri string, jsonBody interface{}) (int, string,
 	body := new(bytes.Buffer)
 	err := json.NewEncoder(body).Encode(jsonBody)
 	if err != nil {
-		return 500, "", err
+		return http.StatusInternalServerError, "", err
 	}
 	req, err := http.NewRequest("POST", urlString, body)
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
@@ -122,7 +122,7 @@ func (client *Client) newRequest(uri string, jsonBody interface{}) (int, string,
 		req.SetBasicAuth(client.Login, client.Password)
 	}
 	if err != nil {
-		return 500, "", err
+		return http.StatusInternalServerError, "", err
 	}
 	tr := &http.Transport{
 		DisableKeepAlives: true,
@@ -137,12 +137,12 @@ func (client *Client) newRequest(uri string, jsonBody interface{}) (int, string,
 	log.Printf("[DEBUG] Request API (%v) %v", urlString, body)
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return 500, "", err
+		return http.StatusInternalServerError, "", err
 	}
 	defer resp.Body.Close()
 	respBody, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return 500, "", err
+		return http.StatusInternalServerError, "", err
 	}
 	log.Printf("[DEBUG] Response API (%v) %v => %v", urlString, resp.StatusCode, string(respBody))
 	return resp.StatusCode, string(respBody), nil
@@ -158,10 +158,10 @@ func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp
 		if err != nil {
 			return ifaceVrrpReturn, err
 		}
-		if statuscode == 401 {
+		if statuscode == http.StatusUnauthorized {
 			return ifaceVrrpReturn, fmt.Errorf("you are Unauthorized")
 		}
-		if statuscode != 200 {
+		if statuscode != http.StatusOK {
 			return ifaceVrrpReturn, fmt.Errorf(body)
 		}
 		return ifaceVrrpReturn, nil
@@ -171,10 +171,10 @@ func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp
 		if err != nil {
 			return ifaceVrrpReturn, err
 		}
-		if statuscode == 401 {
+		if statuscode == http.StatusUnauthorized {
 			return ifaceVrrpReturn, fmt.Errorf("you are Unauthorized")
 		}
-		if statuscode != 200 {
+		if statuscode != http.StatusOK {
 			return ifaceVrrpReturn, fmt.Errorf(body)
 		}
 		return ifaceVrrpReturn, nil
@@ -184,10 +184,10 @@ func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp
 		if err != nil {
 			return ifaceVrrpReturn, err
 		}
-		if statuscode == 401 {
+		if statuscode == http.StatusUnauthorized {
 			return ifaceVrrpReturn, fmt.Errorf("you are Unauthorized")
 		}
-		if statuscode == 404 {
+		if statuscode == http.StatusNotFound {
 			ifaceVrrpReturn.Iface = "null"
 			return ifaceVrrpReturn, nil
 		}
@@ -203,10 +203,10 @@ func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp
 		if err != nil {
 			return ifaceVrrpReturn, err
 		}
-		if statuscode == 401 {
+		if statuscode == http.StatusUnauthorized {
 			return ifaceVrrpReturn, fmt.Errorf("you are Unauthorized")
 		}
-		if statuscode != 200 {
+		if statuscode != http.StatusOK {
 			return ifaceVrrpReturn, fmt.Errorf(body)
 		}
 		return ifaceVrrpReturn, nil
@@ -222,10 +222,10 @@ func (client *Client) requestAPIIFaceVrrpMove(ifaceVrrpReq *ifaceVrrp, oldID int
 	if err != nil {
 		return err
 	}
-	if statuscode == 401 {
+	if statuscode == http.StatusUnauthorized {
 		return fmt.Errorf("you are Unauthorized")
 	}
-	if statuscode != 200 {
+	if statuscode != http.StatusOK {
 		return fmt.Errorf(body)
 	}
 	return nil
@@ -241,10 +241,10 @@ func (client *Client) requestAPIVrrpScript(action string, vrrpScriptReq *vrrpScr
 		if err != nil {
 			return vrrpScriptReturn, err
 		}
-		if statuscode == 401 {
+		if statuscode == http.StatusUnauthorized {
 			return vrrpScriptReturn, fmt.Errorf("you are Unauthorized")
 		}
-		if statuscode != 200 {
+		if statuscode != http.StatusOK {
 			return vrrpScriptReturn, fmt.Errorf(body)
 		}
 		return vrrpScriptReturn, nil
@@ -254,10 +254,10 @@ func (client *Client) requestAPIVrrpScript(action string, vrrpScriptReq *vrrpScr
 		if err != nil {
 			return vrrpScriptReturn, err
 		}
-		if statuscode == 401 {
+		if statuscode == http.StatusUnauthorized {
 			return vrrpScriptReturn, fmt.Errorf("you are Unauthorized")
 		}
-		if statuscode != 200 {
+		if statuscode != http.StatusOK {
 			return vrrpScriptReturn, fmt.Errorf(body)
 		}
 		return vrrpScriptReturn, nil
@@ -267,14 +267,14 @@ func (client *Client) requestAPIVrrpScript(action string, vrrpScriptReq *vrrpScr
 		if err != nil {
 			return vrrpScriptReturn, err
 		}
-		if statuscode == 401 {
+		if statuscode == http.StatusUnauthorized {
 			return vrrpScriptReturn, fmt.Errorf("you are Unauthorized")
 		}
-		if statuscode == 404 {
+		if statuscode == http.StatusNotFound {
 			return vrrpScriptReturn, nil
 		}
-		if statuscode == 500 {
-			return vrrpScriptReturn, fmt.Errorf("[ERROR] 500 %s", body)
+		if statuscode == http.StatusInternalServerError {
+			return vrrpScriptReturn, fmt.Errorf("[ERROR] StatusInternalServerError %s", body)
 		}
 		errDecode := json.Unmarshal([]byte(body), &vrrpScriptReturn)
 		if errDecode != nil {
@@ -287,10 +287,10 @@ func (client *Client) requestAPIVrrpScript(action string, vrrpScriptReq *vrrpScr
 		if err != nil {
 			return vrrpScriptReturn, err
 		}
-		if statuscode == 401 {
+		if statuscode == http.StatusUnauthorized {
 			return vrrpScriptReturn, fmt.Errorf("you are Unauthorized")
 		}
-		if statuscode != 200 {
+		if statuscode != http.StatusOK {
 			return vrrpScriptReturn, fmt.Errorf(body)
 		}
 		return vrrpScriptReturn, nil

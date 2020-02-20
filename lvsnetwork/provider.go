@@ -8,6 +8,11 @@ import (
 	"github.com/hashicorp/terraform/terraform"
 )
 
+const (
+	defaultPortListen = 8080
+	defaultAdvertInt  = 1
+)
+
 // Provider lvsnetwork for terraform
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
@@ -19,7 +24,7 @@ func Provider() terraform.ResourceProvider {
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  8080,
+				Default:  defaultPortListen,
 			},
 			"https": {
 				Type:     schema.TypeBool,
@@ -74,7 +79,7 @@ func Provider() terraform.ResourceProvider {
 			"default_advert_int": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  1,
+				Default:  defaultAdvertInt,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(int)
 					if value < 1 || value > 10 {

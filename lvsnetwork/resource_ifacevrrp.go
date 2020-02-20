@@ -9,6 +9,10 @@ import (
 	"github.com/hashicorp/terraform/helper/schema"
 )
 
+const (
+	maxLengthAuthPass = 8
+)
+
 func resourceIfaceVrrp() *schema.Resource {
 	return &schema.Resource{
 		Create: resourceIfaceVrrpCreate,
@@ -138,7 +142,7 @@ func resourceIfaceVrrp() *schema.Resource {
 				Computed: true,
 				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
 					value := v.(string)
-					if strings.Count(value, "") > 8 {
+					if strings.Count(value, "") > maxLengthAuthPass {
 						errors = append(errors, fmt.Errorf("[ERROR] %q %v too long", k, value))
 					}
 					return
@@ -328,7 +332,7 @@ func resourceIfaceVrrpRead(d *schema.ResourceData, m interface{}) error {
 				panic(tfErr)
 			}
 		}
-	} else if len(IfaceVrrpRead.PostUp) == 1 {
+	} else if len(IfaceVrrpRead.PostUp) > 0 {
 		if IfaceVrrpRead.PostUp[0] == "?" {
 			_, exists := d.GetOk("post_up")
 			if exists {
