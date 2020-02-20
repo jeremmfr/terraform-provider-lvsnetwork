@@ -9,8 +9,8 @@ import (
 )
 
 const (
-	defaultPortListen = 8080
-	defaultAdvertInt  = 1
+	defaultFirewallPort = 8080
+	defaultAdvertInt    = 1
 )
 
 // Provider lvsnetwork for terraform
@@ -24,7 +24,7 @@ func Provider() terraform.ResourceProvider {
 			"port": {
 				Type:     schema.TypeInt,
 				Optional: true,
-				Default:  defaultPortListen,
+				Default:  defaultFirewallPort,
 			},
 			"https": {
 				Type:     schema.TypeBool,
