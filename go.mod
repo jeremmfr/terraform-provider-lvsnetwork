@@ -1,4 +1,4 @@
-module github.com/jeremmfr/terraform-provider-lvsnetwork
+module terraform-provider-lvsnetwork
 
 go 1.13
 
