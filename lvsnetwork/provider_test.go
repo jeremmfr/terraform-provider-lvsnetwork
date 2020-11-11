@@ -1,6 +1,7 @@
-package lvsnetwork
+package lvsnetwork_test
 
 import (
+	"terraform-provider-lvsnetwork/lvsnetwork"
 	"testing"
 
 	"github.com/hashicorp/terraform/helper/schema"
@@ -8,10 +9,11 @@ import (
 )
 
 func TestProvider(t *testing.T) {
-	if err := Provider().(*schema.Provider).InternalValidate(); err != nil {
+	if err := lvsnetwork.Provider().(*schema.Provider).InternalValidate(); err != nil {
 		t.Fatalf("err: %s", err)
 	}
 }
+
 func TestProvider_impl(t *testing.T) {
-	var _ terraform.ResourceProvider = Provider()
+	var _ terraform.ResourceProvider = lvsnetwork.Provider()
 }

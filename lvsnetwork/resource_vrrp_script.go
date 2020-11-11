@@ -53,6 +53,7 @@ func resourceVrrpScript() *schema.Resource {
 					if value <= 0 {
 						errors = append(errors, fmt.Errorf("[ERROR] %q must be positive integer", k))
 					}
+
 					return
 				},
 			},
@@ -65,6 +66,7 @@ func resourceVrrpScript() *schema.Resource {
 					if value <= 0 {
 						errors = append(errors, fmt.Errorf("[ERROR] %q must be positive integer", k))
 					}
+
 					return
 				},
 			},
@@ -88,8 +90,10 @@ func resourceVrrpScriptCreate(d *schema.ResourceData, m interface{}) error {
 		return err
 	}
 	d.SetId(d.Get("name").(string))
+
 	return resourceVrrpScriptRead(d, m)
 }
+
 func resourceVrrpScriptRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 	vrrpScript := createStrucVrrpScript(d)
@@ -136,8 +140,10 @@ func resourceVrrpScriptRead(d *schema.ResourceData, m interface{}) error {
 	if tfErr != nil {
 		panic(tfErr)
 	}
+
 	return nil
 }
+
 func resourceVrrpScriptUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 	d.Partial(true)
@@ -148,8 +154,10 @@ func resourceVrrpScriptUpdate(d *schema.ResourceData, m interface{}) error {
 	}
 
 	d.Partial(false)
+
 	return resourceVrrpScriptRead(d, m)
 }
+
 func resourceVrrpScriptDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 	vrrpScript := createStrucVrrpScript(d)
@@ -157,6 +165,7 @@ func resourceVrrpScriptDelete(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
@@ -173,5 +182,6 @@ func createStrucVrrpScript(d *schema.ResourceData) vrrpScript {
 		User:          d.Get("user").(string),
 		InitFail:      d.Get("init_fail").(bool),
 	}
+
 	return vrrpScript
 }

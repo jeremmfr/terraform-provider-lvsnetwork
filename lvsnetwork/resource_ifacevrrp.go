@@ -45,6 +45,7 @@ func resourceIfaceVrrp() *schema.Resource {
 					if testInput.To16() == nil {
 						errors = append(errors, fmt.Errorf("[ERROR] %q %v isn't an IPv4 or IPv6", k, value))
 					}
+
 					return
 				},
 			},
@@ -58,6 +59,7 @@ func resourceIfaceVrrp() *schema.Resource {
 					if testInput.To16() == nil {
 						errors = append(errors, fmt.Errorf("[ERROR] %q %v isn't an IPv4 or IPv6", k, value))
 					}
+
 					return
 				},
 			},
@@ -70,6 +72,7 @@ func resourceIfaceVrrp() *schema.Resource {
 					if value < 8 || value > 127 {
 						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 8 to 127", k))
 					}
+
 					return
 				},
 			},
@@ -82,6 +85,7 @@ func resourceIfaceVrrp() *schema.Resource {
 					if value < 1 || value > 255 {
 						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 255", k))
 					}
+
 					return
 				},
 			},
@@ -94,6 +98,7 @@ func resourceIfaceVrrp() *schema.Resource {
 					if value < 1 || value > 255 {
 						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 255", k))
 					}
+
 					return
 				},
 			},
@@ -121,6 +126,7 @@ func resourceIfaceVrrp() *schema.Resource {
 					if value < 1 || value > 255 {
 						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 255", k))
 					}
+
 					return
 				},
 			},
@@ -133,6 +139,7 @@ func resourceIfaceVrrp() *schema.Resource {
 					if value != "PASS" && value != "AH" {
 						errors = append(errors, fmt.Errorf("[ERROR] %q must be PASS or AH", k))
 					}
+
 					return
 				},
 			},
@@ -145,6 +152,7 @@ func resourceIfaceVrrp() *schema.Resource {
 					if strings.Count(value, "") > maxLengthAuthPass {
 						errors = append(errors, fmt.Errorf("[ERROR] %q %v too long", k, value))
 					}
+
 					return
 				},
 			},
@@ -163,6 +171,7 @@ func resourceIfaceVrrp() *schema.Resource {
 					if testInput.To16() == nil {
 						errors = append(errors, fmt.Errorf("[ERROR] %q %v isn't an IPv4 or IPv6", k, value))
 					}
+
 					return
 				},
 			},
@@ -190,6 +199,7 @@ func resourceIfaceVrrp() *schema.Resource {
 					if value < 1 || value > 10 {
 						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 10", k))
 					}
+
 					return
 				},
 			},
@@ -202,6 +212,7 @@ func resourceIfaceVrrp() *schema.Resource {
 					if value < 1 || value > 10 {
 						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 10", k))
 					}
+
 					return
 				},
 			},
@@ -214,6 +225,7 @@ func resourceIfaceVrrp() *schema.Resource {
 					if value < 10 || value > 300 {
 						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 10 to 300", k))
 					}
+
 					return
 				},
 			},
@@ -276,8 +288,10 @@ func resourceIfaceVrrpCreate(d *schema.ResourceData, m interface{}) error {
 	} else {
 		d.SetId(d.Get("iface").(string) + "_" + strconv.Itoa(d.Get("id_vrrp").(int)))
 	}
+
 	return nil
 }
+
 func resourceIfaceVrrpRead(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 	IfaceVrrp := createStrucIfaceVrrp(d)
@@ -441,8 +455,10 @@ func resourceIfaceVrrpRead(d *schema.ResourceData, m interface{}) error {
 			panic(tfErr)
 		}
 	}
+
 	return nil
 }
+
 func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 	d.Partial(true)
@@ -586,8 +602,10 @@ func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
 		d.SetId(d.Get("iface").(string) + "_0")
 	}
 	d.Partial(false)
+
 	return nil
 }
+
 func resourceIfaceVrrpDelete(d *schema.ResourceData, m interface{}) error {
 	client := m.(*Client)
 	IfaceVrrp := createStrucIfaceVrrp(d)
@@ -595,10 +613,11 @@ func resourceIfaceVrrpDelete(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
+
 	return nil
 }
 
-// validateIPList : validate list of cidr in ip_vip
+// validateIPList : validate list of cidr in ip_vip.
 func validateIPList(d *schema.ResourceData) error {
 	var errors []string
 	VIPList := make([]string, len(d.Get("ip_vip").([]interface{})))
@@ -614,6 +633,7 @@ func validateIPList(d *schema.ResourceData) error {
 	if len(errors) != 0 {
 		return fmt.Errorf("[ERROR] " + strings.Join(errors, ", "))
 	}
+
 	return nil
 }
 
@@ -665,10 +685,11 @@ func createStrucIfaceVrrp(d *schema.ResourceData) ifaceVrrp {
 		UseVmac:           d.Get("use_vmac").(bool),
 		TrackScript:       TrackScript,
 	}
+
 	return IfaceVrrp
 }
 
-// setVrrpConfig : set default parameters (computed)
+// setVrrpConfig : set default parameters (computed).
 func setVrrpConfig(d *schema.ResourceData, m interface{}) {
 	client := m.(*Client)
 	if d.Get("id_vrrp").(int) == 0 {

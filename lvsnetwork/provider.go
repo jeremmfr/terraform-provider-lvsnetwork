@@ -13,7 +13,7 @@ const (
 	defaultAdvertInt    = 1
 )
 
-// Provider lvsnetwork for terraform
+// Provider lvsnetwork for terraform.
 func Provider() terraform.ResourceProvider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
@@ -68,6 +68,7 @@ func Provider() terraform.ResourceProvider {
 					if value < 1 || value > 255 {
 						errors = append(errors, fmt.Errorf("%q must be in the range from 1 to 255", k))
 					}
+
 					return
 				},
 			},
@@ -85,6 +86,7 @@ func Provider() terraform.ResourceProvider {
 					if value < 1 || value > 10 {
 						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 10", k))
 					}
+
 					return
 				},
 			},
@@ -123,5 +125,6 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 		defaultAdvertInt:   d.Get("default_advert_int").(int),
 		defaultTrackScript: defaultTrackScript,
 	}
+
 	return config.Client()
 }

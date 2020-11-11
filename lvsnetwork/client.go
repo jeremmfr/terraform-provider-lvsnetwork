@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-// Client = provider configuration
+// Client = provider configuration.
 type Client struct {
 	HTTPS              bool
 	Insecure           bool
@@ -26,6 +26,7 @@ type Client struct {
 	Password           string
 	DefaultTrackScript []string
 }
+
 type ifaceVrrp struct {
 	IPVipOnly         bool     `json:"IP_vip_only"`
 	UseVmac           bool     `json:"Use_vmac"`
@@ -52,6 +53,7 @@ type ifaceVrrp struct {
 	PostUp            []string `json:"Post_up"`
 	TrackScript       []string `json:"track_script"`
 }
+
 type vrrpScript struct {
 	InitFail      bool   `json:"init_fail"`
 	WeightReverse bool   `json:"weight_reverse"`
@@ -65,7 +67,7 @@ type vrrpScript struct {
 	User          string `json:"user"`
 }
 
-// NewClient configure
+// NewClient configure.
 func NewClient(firewallIP string, firewallPortAPI int, https bool, insecure bool, logname string,
 	login string, password string, defaultIDVrrp int, defaultVrrpGroup string, defaultAdvertInt int,
 	defaultTrackSCript []string) *Client {
@@ -82,41 +84,42 @@ func NewClient(firewallIP string, firewallPortAPI int, https bool, insecure bool
 		DefaultAdvertInt:   defaultAdvertInt,
 		DefaultTrackScript: defaultTrackSCript,
 	}
+
 	return client
 }
 
-// getDefaultIDVrrp : get provider config for computed id_vrrp resource parameter
+// getDefaultIDVrrp : get provider config for computed id_vrrp resource parameter.
 func (client *Client) getDefaultIDVrrp() int {
 	return client.DefaultIDVrrp
 }
 
-// getDefaultVrrpGroup : get provider config for computed vrrp_group resource parameter
+// getDefaultVrrpGroup : get provider config for computed vrrp_group resource parameter.
 func (client *Client) getDefaultVrrpGroup() string {
 	return client.DefaultVrrpGroup
 }
 
-// getDefaultAdvertInt : get provider config for computed advert_int resource parameter
+// getDefaultAdvertInt : get provider config for computed advert_int resource parameter.
 func (client *Client) getDefaultAdvertInt() int {
 	return client.DefaultAdvertInt
 }
 
-// getDefaultTrackScript : get provider config for computed track_script
+// getDefaultTrackScript : get provider config for computed track_script.
 func (client *Client) getDefaultTrackScript() []string {
 	return client.DefaultTrackScript
 }
 
-// newRequest : call API
+// newRequest : call API.
 func (client *Client) newRequest(uri string, jsonBody interface{}) (int, string, error) {
 	urlString := "http://" + client.FirewallIP + ":" + strconv.Itoa(client.Port) + uri + "?&logname=" + client.Logname
 	if client.HTTPS {
-		urlString = strings.Replace(urlString, "http://", "https://", -1)
+		urlString = strings.ReplaceAll(urlString, "http://", "https://")
 	}
 	body := new(bytes.Buffer)
 	err := json.NewEncoder(body).Encode(jsonBody)
 	if err != nil {
 		return http.StatusInternalServerError, "", err
 	}
-	req, err := http.NewRequest("POST", urlString, body)
+	req, err := http.NewRequest("POST", urlString, body) // nolint: noctx
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
 	if client.Login != "" && client.Password != "" {
 		req.SetBasicAuth(client.Login, client.Password)
@@ -145,10 +148,11 @@ func (client *Client) newRequest(uri string, jsonBody interface{}) (int, string,
 		return http.StatusInternalServerError, "", err
 	}
 	log.Printf("[DEBUG] Response API (%v) %v => %v", urlString, resp.StatusCode, string(respBody))
+
 	return resp.StatusCode, string(respBody), nil
 }
 
-// requestAPIIFaceVrrp : prepare request to API for resource ifacevrrp and call api with newRequest()
+// requestAPIIFaceVrrp : prepare request to API for resource ifacevrrp and call api with newRequest().
 func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp) (ifaceVrrp, error) {
 	var ifaceVrrpReturn ifaceVrrp
 	switch action {
@@ -164,6 +168,7 @@ func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp
 		if statuscode != http.StatusOK {
 			return ifaceVrrpReturn, fmt.Errorf(body)
 		}
+
 		return ifaceVrrpReturn, nil
 	case "REMOVE":
 		uriString := "/remove_iface_vrrp/" + ifaceVrrpReq.Iface + "/"
@@ -177,6 +182,7 @@ func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp
 		if statuscode != http.StatusOK {
 			return ifaceVrrpReturn, fmt.Errorf(body)
 		}
+
 		return ifaceVrrpReturn, nil
 	case "CHECK":
 		uriString := "/check_iface_vrrp/" + ifaceVrrpReq.Iface + "/"
@@ -189,6 +195,7 @@ func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp
 		}
 		if statuscode == http.StatusNotFound {
 			ifaceVrrpReturn.Iface = "null"
+
 			return ifaceVrrpReturn, nil
 		}
 
@@ -196,6 +203,7 @@ func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp
 		if errDecode != nil {
 			return ifaceVrrpReturn, fmt.Errorf("[ERROR] decode json API response (%v) %v", errDecode, body)
 		}
+
 		return ifaceVrrpReturn, nil
 	case "CHANGE":
 		uriString := "/change_iface_vrrp/" + ifaceVrrpReq.Iface + "/"
@@ -209,13 +217,14 @@ func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp
 		if statuscode != http.StatusOK {
 			return ifaceVrrpReturn, fmt.Errorf(body)
 		}
+
 		return ifaceVrrpReturn, nil
 	default:
 		return ifaceVrrpReturn, fmt.Errorf("internal error => unknown action for requestAPI")
 	}
 }
 
-// requestAPIMove : call /moveid_iface_vrrp/ on api
+// requestAPIMove : call /moveid_iface_vrrp/ on api.
 func (client *Client) requestAPIIFaceVrrpMove(ifaceVrrpReq *ifaceVrrp, oldID int) error {
 	uriString := "/moveid_iface_vrrp/" + ifaceVrrpReq.Iface + "/" + strconv.Itoa(oldID) + "/"
 	statuscode, body, err := client.newRequest(uriString, ifaceVrrpReq)
@@ -228,10 +237,11 @@ func (client *Client) requestAPIIFaceVrrpMove(ifaceVrrpReq *ifaceVrrp, oldID int
 	if statuscode != http.StatusOK {
 		return fmt.Errorf(body)
 	}
+
 	return nil
 }
 
-// requestAPIVrrpScript : prepare request to API for resource vrpp_script and call api with newRequest()
+// requestAPIVrrpScript : prepare request to API for resource vrpp_script and call api with newRequest().
 func (client *Client) requestAPIVrrpScript(action string, vrrpScriptReq *vrrpScript) (vrrpScript, error) {
 	var vrrpScriptReturn vrrpScript
 	switch action {
@@ -247,6 +257,7 @@ func (client *Client) requestAPIVrrpScript(action string, vrrpScriptReq *vrrpScr
 		if statuscode != http.StatusOK {
 			return vrrpScriptReturn, fmt.Errorf(body)
 		}
+
 		return vrrpScriptReturn, nil
 	case "REMOVE":
 		uriString := "/remove_vrrp_script/" + vrrpScriptReq.Name + "/"
@@ -260,6 +271,7 @@ func (client *Client) requestAPIVrrpScript(action string, vrrpScriptReq *vrrpScr
 		if statuscode != http.StatusOK {
 			return vrrpScriptReturn, fmt.Errorf(body)
 		}
+
 		return vrrpScriptReturn, nil
 	case "CHECK":
 		uriString := "/check_vrrp_script/" + vrrpScriptReq.Name + "/"
@@ -280,6 +292,7 @@ func (client *Client) requestAPIVrrpScript(action string, vrrpScriptReq *vrrpScr
 		if errDecode != nil {
 			return vrrpScriptReturn, fmt.Errorf("[ERROR] decode json API response (%v) %v", errDecode, body)
 		}
+
 		return vrrpScriptReturn, nil
 	case "CHANGE":
 		uriString := "/change_vrrp_script/" + vrrpScriptReq.Name + "/"
@@ -293,6 +306,7 @@ func (client *Client) requestAPIVrrpScript(action string, vrrpScriptReq *vrrpScr
 		if statuscode != http.StatusOK {
 			return vrrpScriptReturn, fmt.Errorf(body)
 		}
+
 		return vrrpScriptReturn, nil
 	default:
 		return vrrpScriptReturn, fmt.Errorf("internal error => unknown action for requestAPI")
