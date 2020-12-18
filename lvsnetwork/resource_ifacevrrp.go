@@ -346,14 +346,12 @@ func resourceIfaceVrrpRead(d *schema.ResourceData, m interface{}) error {
 				panic(tfErr)
 			}
 		}
-	} else if len(IfaceVrrpRead.PostUp) > 0 {
-		if IfaceVrrpRead.PostUp[0] == "?" {
-			_, exists := d.GetOk("post_up")
-			if exists {
-				tfErr := d.Set("post_up", []string{})
-				if tfErr != nil {
-					panic(tfErr)
-				}
+	} else if len(IfaceVrrpRead.PostUp) == 1 && IfaceVrrpRead.PostUp[0] == "?" {
+		_, exists := d.GetOk("post_up")
+		if exists {
+			tfErr := d.Set("post_up", []string{})
+			if tfErr != nil {
+				panic(tfErr)
 			}
 		}
 	}
