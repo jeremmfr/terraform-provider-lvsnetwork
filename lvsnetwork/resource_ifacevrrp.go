@@ -252,6 +252,8 @@ func resourceIfaceVrrpCreate(d *schema.ResourceData, m interface{}) error {
 			return err
 		}
 		setVrrpConfig(d, m)
+	} else if tfErr := d.Set("track_script", []string{}); tfErr != nil {
+		panic(tfErr)
 	}
 	if !d.Get("ip_vip_only").(bool) {
 		if strings.Contains(d.Get("iface").(string), "vlan") && d.Get("vlan_device").(string) == "" {
