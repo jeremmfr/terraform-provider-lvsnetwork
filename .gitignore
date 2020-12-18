@@ -10,3 +10,6 @@
 
 # Output of the go coverage tool, specifically when used with LiteIDE
 *.out
+
+terraform-provider-lvsnetwork
+terraform-provider-lvsnetwork_v*

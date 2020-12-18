@@ -152,7 +152,6 @@ func resourceVrrpScriptUpdate(d *schema.ResourceData, m interface{}) error {
 	if err != nil {
 		return err
 	}
-
 	d.Partial(false)
 
 	return resourceVrrpScriptRead(d, m)

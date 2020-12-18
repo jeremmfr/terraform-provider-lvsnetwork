@@ -201,7 +201,7 @@ func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp
 
 		errDecode := json.Unmarshal([]byte(body), &ifaceVrrpReturn)
 		if errDecode != nil {
-			return ifaceVrrpReturn, fmt.Errorf("[ERROR] decode json API response (%v) %v", errDecode, body)
+			return ifaceVrrpReturn, fmt.Errorf("[ERROR] decode json API response (%w) %v", errDecode, body)
 		}
 
 		return ifaceVrrpReturn, nil
@@ -290,7 +290,7 @@ func (client *Client) requestAPIVrrpScript(action string, vrrpScriptReq *vrrpScr
 		}
 		errDecode := json.Unmarshal([]byte(body), &vrrpScriptReturn)
 		if errDecode != nil {
-			return vrrpScriptReturn, fmt.Errorf("[ERROR] decode json API response (%v) %v", errDecode, body)
+			return vrrpScriptReturn, fmt.Errorf("[ERROR] decode json API response (%w) %v", errDecode, body)
 		}
 
 		return vrrpScriptReturn, nil

@@ -637,7 +637,7 @@ func validateIPList(d *schema.ResourceData) error {
 	return nil
 }
 
-//  createStrucIfaceVrrp prepare IfaceVrrp before call API
+//  createStrucIfaceVrrp prepare IfaceVrrp before call API.
 func createStrucIfaceVrrp(d *schema.ResourceData) ifaceVrrp {
 	VIPList := make([]string, len(d.Get("ip_vip").([]interface{})))
 	for i, d := range d.Get("ip_vip").([]interface{}) {
