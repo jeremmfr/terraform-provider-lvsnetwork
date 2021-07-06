@@ -1,7 +1,7 @@
 package main
 
 import (
-	"terraform-provider-lvsnetwork/lvsnetwork"
+	"github.com/jeremmfr/terraform-provider-lvsnetwork/lvsnetwork"
 
 	"github.com/hashicorp/terraform/plugin"
 )

@@ -1,8 +1,9 @@
 package lvsnetwork_test
 
 import (
-	"terraform-provider-lvsnetwork/lvsnetwork"
 	"testing"
+
+	"github.com/jeremmfr/terraform-provider-lvsnetwork/lvsnetwork"
 
 	"github.com/hashicorp/terraform/helper/schema"
 	"github.com/hashicorp/terraform/terraform"
