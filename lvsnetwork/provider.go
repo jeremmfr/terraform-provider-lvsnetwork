@@ -58,26 +58,32 @@ func Provider() *schema.Provider {
 				Optional: true,
 				Default:  "",
 			},
-			"default_id_vrrp": {
-				Type:         schema.TypeInt,
-				Required:     true,
-				ValidateFunc: validation.IntBetween(1, 255),
-			},
-			"default_vrrp_group": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "VG_1",
-			},
 			"default_advert_int": {
 				Type:         schema.TypeInt,
 				Optional:     true,
 				Default:      defaultAdvertInt,
 				ValidateFunc: validation.IntBetween(1, 10),
 			},
+			"default_auth_pass": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "word",
+				ValidateFunc: validation.StringLenBetween(1, 7),
+			},
+			"default_id_vrrp": {
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntBetween(1, 255),
+			},
 			"default_track_script": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"default_vrrp_group": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "VG_1",
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
@@ -105,10 +111,11 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 		vaultPath:          d.Get("vault_path").(string),
 		vaultKey:           d.Get("vault_key").(string),
 		defaultIDVrrp:      d.Get("default_id_vrrp").(int),
+		defaultAuthPass:    d.Get("default_auth_pass").(string),
 		defaultVrrpGroup:   d.Get("default_vrrp_group").(string),
 		defaultAdvertInt:   d.Get("default_advert_int").(int),
 		defaultTrackScript: defaultTrackScript,
 	}
 
-	return config.Client()
+	return config.Client(), nil
 }

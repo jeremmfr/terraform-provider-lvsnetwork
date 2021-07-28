@@ -634,7 +634,7 @@ func setVrrpConfig(d *schema.ResourceData, m interface{}) {
 		}
 	}
 	if d.Get("auth_pass").(string) == "" {
-		tfErr := d.Set("auth_pass", "word")
+		tfErr := d.Set("auth_pass", client.getDefaultAuthPass())
 		if tfErr != nil {
 			panic(tfErr)
 		}

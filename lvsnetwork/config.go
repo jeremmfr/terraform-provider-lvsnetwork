@@ -14,6 +14,7 @@ type Config struct {
 	defaultIDVrrp      int
 	defaultAdvertInt   int
 	firewallPortAPI    int
+	defaultAuthPass    string
 	defaultVrrpGroup   string
 	firewallIP         string
 	logname            string
@@ -25,20 +26,13 @@ type Config struct {
 }
 
 // Client configures with Config.
-func (c *Config) Client() (*Client, error) {
-	var client *Client
+func (c *Config) Client() *Client {
 	if !c.vaultEnable {
-		client = NewClient(c.firewallIP, c.firewallPortAPI, c.https, c.insecure, c.logname,
-			c.login, c.password, c.defaultIDVrrp, c.defaultVrrpGroup, c.defaultAdvertInt,
-			c.defaultTrackScript)
-	} else {
-		login, password := getloginVault(c.vaultPath, c.firewallIP, c.vaultKey)
-		client = NewClient(c.firewallIP, c.firewallPortAPI, c.https, c.insecure, c.logname,
-			login, password, c.defaultIDVrrp, c.defaultVrrpGroup, c.defaultAdvertInt,
-			c.defaultTrackScript)
+		return NewClient(c, c.login, c.password)
 	}
+	login, password := getloginVault(c.vaultPath, c.firewallIP, c.vaultKey)
 
-	return client, nil
+	return NewClient(c, login, password)
 }
 
 func getloginVault(path string, firewallIP string, key string) (string, string) {

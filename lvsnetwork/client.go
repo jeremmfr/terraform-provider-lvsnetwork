@@ -29,6 +29,7 @@ type Client struct {
 	DefaultIDVrrp      int
 	DefaultAdvertInt   int
 	Port               int
+	DefaultAuthPass    string
 	DefaultVrrpGroup   string
 	FirewallIP         string
 	Logname            string
@@ -78,21 +79,20 @@ type vrrpScript struct {
 }
 
 // NewClient configure.
-func NewClient(firewallIP string, firewallPortAPI int, https bool, insecure bool, logname string,
-	login string, password string, defaultIDVrrp int, defaultVrrpGroup string, defaultAdvertInt int,
-	defaultTrackSCript []string) *Client {
+func NewClient(c *Config, login, password string) *Client {
 	client := &Client{
-		FirewallIP:         firewallIP,
-		Port:               firewallPortAPI,
-		HTTPS:              https,
-		Insecure:           insecure,
-		Logname:            logname,
+		FirewallIP:         c.firewallIP,
+		Port:               c.firewallPortAPI,
+		HTTPS:              c.https,
+		Insecure:           c.insecure,
+		Logname:            c.logname,
 		Login:              login,
 		Password:           password,
-		DefaultIDVrrp:      defaultIDVrrp,
-		DefaultVrrpGroup:   defaultVrrpGroup,
-		DefaultAdvertInt:   defaultAdvertInt,
-		DefaultTrackScript: defaultTrackSCript,
+		DefaultAdvertInt:   c.defaultAdvertInt,
+		DefaultAuthPass:    c.defaultAuthPass,
+		DefaultIDVrrp:      c.defaultIDVrrp,
+		DefaultTrackScript: c.defaultTrackScript,
+		DefaultVrrpGroup:   c.defaultVrrpGroup,
 	}
 
 	return client
@@ -101,6 +101,10 @@ func NewClient(firewallIP string, firewallPortAPI int, https bool, insecure bool
 // getDefaultIDVrrp : get provider config for computed id_vrrp resource parameter.
 func (client *Client) getDefaultIDVrrp() int {
 	return client.DefaultIDVrrp
+}
+
+func (client *Client) getDefaultAuthPass() string {
+	return client.DefaultAuthPass
 }
 
 // getDefaultVrrpGroup : get provider config for computed vrrp_group resource parameter.
