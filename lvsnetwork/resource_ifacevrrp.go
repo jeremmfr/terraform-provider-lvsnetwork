@@ -9,10 +9,7 @@ import (
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
-)
-
-const (
-	maxLengthAuthPass = 8
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceIfaceVrrp() *schema.Resource {
@@ -38,71 +35,34 @@ func resourceIfaceVrrp() *schema.Resource {
 				Optional: true,
 			},
 			"ip_master": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					testInput := net.ParseIP(value)
-					if testInput.To16() == nil {
-						errors = append(errors, fmt.Errorf("[ERROR] %q %v isn't an IPv4 or IPv6", k, value))
-					}
-
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPAddress,
 			},
 			"ip_slave": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					testInput := net.ParseIP(value)
-					if testInput.To16() == nil {
-						errors = append(errors, fmt.Errorf("[ERROR] %q %v isn't an IPv4 or IPv6", k, value))
-					}
-
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPAddress,
 			},
 			"mask": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 8 || value > 127 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 8 to 127", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(8, 127),
 			},
 			"prio_master": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 1 || value > 255 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 255", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(1, 255),
 			},
 			"prio_slave": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 1 || value > 255 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 255", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(1, 255),
 			},
 			"vlan_device": {
 				Type:     schema.TypeString,
@@ -120,43 +80,22 @@ func resourceIfaceVrrp() *schema.Resource {
 				Optional: true,
 			},
 			"id_vrrp": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 1 || value > 255 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 255", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(1, 255),
 			},
 			"auth_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if value != "PASS" && value != "AH" {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be PASS or AH", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{"PASS", "AH"}, false),
 			},
 			"auth_pass": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if strings.Count(value, "") > maxLengthAuthPass {
-						errors = append(errors, fmt.Errorf("[ERROR] %q %v too long", k, value))
-					}
-
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringLenBetween(1, 7),
 			},
 			"post_up": {
 				Type:     schema.TypeList,
@@ -164,18 +103,10 @@ func resourceIfaceVrrp() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"default_gw": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					testInput := net.ParseIP(value)
-					if testInput.To16() == nil {
-						errors = append(errors, fmt.Errorf("[ERROR] %q %v isn't an IPv4 or IPv6", k, value))
-					}
-
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPAddress,
 			},
 			"lacp_slaves": {
 				Type:     schema.TypeString,
@@ -193,43 +124,22 @@ func resourceIfaceVrrp() *schema.Resource {
 				Optional: true,
 			},
 			"garp_m_delay": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 1 || value > 10 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 10", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(1, 10),
 			},
 			"advert_int": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 1 || value > 10 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 10", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(1, 10),
 			},
 			"garp_master_refresh": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 10 || value > 300 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 10 to 300", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(10, 300),
 			},
 			"use_vmac": {
 				Type:     schema.TypeBool,

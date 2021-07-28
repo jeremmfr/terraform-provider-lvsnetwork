@@ -2,10 +2,10 @@ package lvsnetwork
 
 import (
 	"context"
-	"fmt"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -47,30 +47,16 @@ func resourceVrrpScript() *schema.Resource {
 				Optional: true,
 			},
 			"rise": {
-				Type:     schema.TypeInt,
-				Default:  defaultVrrpScriptRise,
-				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value <= 0 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be positive integer", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Default:      defaultVrrpScriptRise,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"fall": {
-				Type:     schema.TypeInt,
-				Default:  defaultVrrpScriptFall,
-				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value <= 0 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be positive integer", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Default:      defaultVrrpScriptFall,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"user": {
 				Type:     schema.TypeString,

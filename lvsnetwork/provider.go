@@ -1,10 +1,10 @@
 package lvsnetwork
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -59,16 +59,9 @@ func Provider() *schema.Provider {
 				Default:  "",
 			},
 			"default_id_vrrp": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 1 || value > 255 {
-						errors = append(errors, fmt.Errorf("%q must be in the range from 1 to 255", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntBetween(1, 255),
 			},
 			"default_vrrp_group": {
 				Type:     schema.TypeString,
@@ -76,17 +69,10 @@ func Provider() *schema.Provider {
 				Default:  "VG_1",
 			},
 			"default_advert_int": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  defaultAdvertInt,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 1 || value > 10 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 10", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      defaultAdvertInt,
+				ValidateFunc: validation.IntBetween(1, 10),
 			},
 			"default_track_script": {
 				Type:     schema.TypeList,
