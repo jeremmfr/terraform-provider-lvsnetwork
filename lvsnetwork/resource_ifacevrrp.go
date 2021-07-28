@@ -6,7 +6,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
 const (
@@ -551,8 +551,7 @@ func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
 			}
 		}
 		d.SetId(d.Get("iface").(string) + "_" + strconv.Itoa(d.Get("id_vrrp").(int)))
-		d.SetPartial("id_vrrp")
-		d.SetPartial("sync_iface")
+		d.Partial(false)
 	}
 	_, err := client.requestAPIIFaceVrrp("CHANGE", &IfaceVrrp)
 	if err != nil {
