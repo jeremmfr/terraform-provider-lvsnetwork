@@ -1,11 +1,13 @@
 package lvsnetwork
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"strconv"
 	"strings"
 
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
 	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
 )
 
@@ -15,10 +17,10 @@ const (
 
 func resourceIfaceVrrp() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIfaceVrrpCreate,
-		Read:   resourceIfaceVrrpRead,
-		Update: resourceIfaceVrrpUpdate,
-		Delete: resourceIfaceVrrpDelete,
+		CreateContext: resourceIfaceVrrpCreate,
+		ReadContext:   resourceIfaceVrrpRead,
+		UpdateContext: resourceIfaceVrrpUpdate,
+		DeleteContext: resourceIfaceVrrpDelete,
 
 		Schema: map[string]*schema.Schema{
 			"iface": {
@@ -244,12 +246,12 @@ func resourceIfaceVrrp() *schema.Resource {
 	}
 }
 
-func resourceIfaceVrrpCreate(d *schema.ResourceData, m interface{}) error {
+func resourceIfaceVrrpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*Client)
 	if len(d.Get("ip_vip").([]interface{})) != 0 {
 		err := validateIPList(d)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		setVrrpConfig(d, m)
 	} else if tfErr := d.Set("track_script", []string{}); tfErr != nil {
@@ -270,20 +272,20 @@ func resourceIfaceVrrpCreate(d *schema.ResourceData, m interface{}) error {
 		}
 		if len(d.Get("ip_vip").([]interface{})) != 0 {
 			if d.Get("ip_master").(string) == "" {
-				return fmt.Errorf("[ERROR] IP_vip_only = false so ip_master missing")
+				return diag.FromErr(fmt.Errorf("[ERROR] IP_vip_only = false so ip_master missing"))
 			}
 			if d.Get("ip_slave").(string) == "" {
-				return fmt.Errorf("[ERROR] IP_vip_only = false so ip_slave missing")
+				return diag.FromErr(fmt.Errorf("[ERROR] IP_vip_only = false so ip_slave missing"))
 			}
 			if d.Get("mask").(int) == 0 {
-				return fmt.Errorf("[ERROR] IP_vip_only = false so mask missing")
+				return diag.FromErr(fmt.Errorf("[ERROR] IP_vip_only = false so mask missing"))
 			}
 		}
 	}
 	IfaceVrrp := createStrucIfaceVrrp(d)
-	_, err := client.requestAPIIFaceVrrp("ADD", &IfaceVrrp)
+	_, err := client.requestAPIIFaceVrrp(ctx, ADD, &IfaceVrrp)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if len(d.Get("ip_vip").([]interface{})) == 0 {
 		d.SetId(d.Get("iface").(string) + "_0")
@@ -294,12 +296,12 @@ func resourceIfaceVrrpCreate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceIfaceVrrpRead(d *schema.ResourceData, m interface{}) error {
+func resourceIfaceVrrpRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*Client)
 	IfaceVrrp := createStrucIfaceVrrp(d)
-	IfaceVrrpRead, err := client.requestAPIIFaceVrrp("CHECK", &IfaceVrrp)
+	IfaceVrrpRead, err := client.requestAPIIFaceVrrp(ctx, CHECK, &IfaceVrrp)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if IfaceVrrpRead.Iface == "null" {
 		d.SetId("")
@@ -459,13 +461,13 @@ func resourceIfaceVrrpRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceIfaceVrrpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*Client)
 	d.Partial(true)
 	if len(d.Get("ip_vip").([]interface{})) != 0 {
 		err := validateIPList(d)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		setVrrpConfig(d, m)
 	}
@@ -478,13 +480,13 @@ func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if d.Get("ip_master").(string) == "" {
-				return fmt.Errorf("[ERROR] ip_vip_only = false so ip_master missing")
+				return diag.FromErr(fmt.Errorf("[ERROR] ip_vip_only = false so ip_master missing"))
 			}
 			if d.Get("ip_slave").(string) == "" {
-				return fmt.Errorf("[ERROR] ip_vip_only = false so ip_slave missing")
+				return diag.FromErr(fmt.Errorf("[ERROR] ip_vip_only = false so ip_slave missing"))
 			}
 			if d.Get("mask").(int) == 0 {
-				return fmt.Errorf("[ERROR] IP_vip_only = false so mask missing")
+				return diag.FromErr(fmt.Errorf("[ERROR] IP_vip_only = false so mask missing"))
 			}
 		} else {
 			tfErr := d.Set("ip_master", "")
@@ -540,22 +542,22 @@ func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
 	if (len(d.Get("ip_vip").([]interface{})) != 0) && (d.HasChange("id_vrrp") || d.HasChange("iface_vrrp")) {
 		oldID, newID := d.GetChange("id_vrrp")
 		if oldID.(int) != 0 {
-			err := client.requestAPIIFaceVrrpMove(&IfaceVrrp, oldID.(int))
+			err := client.requestAPIIFaceVrrpMove(ctx, &IfaceVrrp, oldID.(int))
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		} else {
-			err := client.requestAPIIFaceVrrpMove(&IfaceVrrp, newID.(int))
+			err := client.requestAPIIFaceVrrpMove(ctx, &IfaceVrrp, newID.(int))
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 		d.SetId(d.Get("iface").(string) + "_" + strconv.Itoa(d.Get("id_vrrp").(int)))
 		d.Partial(false)
 	}
-	_, err := client.requestAPIIFaceVrrp("CHANGE", &IfaceVrrp)
+	_, err := client.requestAPIIFaceVrrp(ctx, CHANGE, &IfaceVrrp)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if len(d.Get("ip_vip").([]interface{})) == 0 {
 		tfErr := d.Set("id_vrrp", 0)
@@ -605,12 +607,12 @@ func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceIfaceVrrpDelete(d *schema.ResourceData, m interface{}) error {
+func resourceIfaceVrrpDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*Client)
 	IfaceVrrp := createStrucIfaceVrrp(d)
-	_, err := client.requestAPIIFaceVrrp("REMOVE", &IfaceVrrp)
+	_, err := client.requestAPIIFaceVrrp(ctx, REMOVE, &IfaceVrrp)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil

@@ -2,6 +2,7 @@ package lvsnetwork
 
 import (
 	"bytes"
+	"context"
 	"crypto/tls"
 	"encoding/json"
 	"fmt"
@@ -10,6 +11,15 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+)
+
+type action int
+
+const (
+	ADD action = iota
+	REMOVE
+	CHECK
+	CHANGE
 )
 
 // Client = provider configuration.
@@ -109,7 +119,7 @@ func (client *Client) getDefaultTrackScript() []string {
 }
 
 // newRequest : call API.
-func (client *Client) newRequest(uri string, jsonBody interface{}) (int, string, error) {
+func (client *Client) newRequest(ctx context.Context, uri string, jsonBody interface{}) (int, string, error) {
 	urlString := "http://" + client.FirewallIP + ":" + strconv.Itoa(client.Port) + uri + "?&logname=" + client.Logname
 	if client.HTTPS {
 		urlString = strings.ReplaceAll(urlString, "http://", "https://")
@@ -119,7 +129,7 @@ func (client *Client) newRequest(uri string, jsonBody interface{}) (int, string,
 	if err != nil {
 		return http.StatusInternalServerError, "", err
 	}
-	req, err := http.NewRequest("POST", urlString, body) // nolint: noctx
+	req, err := http.NewRequestWithContext(ctx, "POST", urlString, body)
 	req.Header.Add("Content-Type", "application/json; charset=utf-8")
 	if client.Login != "" && client.Password != "" {
 		req.SetBasicAuth(client.Login, client.Password)
@@ -153,12 +163,12 @@ func (client *Client) newRequest(uri string, jsonBody interface{}) (int, string,
 }
 
 // requestAPIIFaceVrrp : prepare request to API for resource ifacevrrp and call api with newRequest().
-func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp) (ifaceVrrp, error) {
+func (client *Client) requestAPIIFaceVrrp(ctx context.Context, act action, ifaceVrrpReq *ifaceVrrp) (ifaceVrrp, error) {
 	var ifaceVrrpReturn ifaceVrrp
-	switch action {
-	case "ADD":
+	switch act {
+	case ADD:
 		uriString := "/add_iface_vrrp/" + ifaceVrrpReq.Iface + "/"
-		statuscode, body, err := client.newRequest(uriString, ifaceVrrpReq)
+		statuscode, body, err := client.newRequest(ctx, uriString, ifaceVrrpReq)
 		if err != nil {
 			return ifaceVrrpReturn, err
 		}
@@ -170,9 +180,9 @@ func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp
 		}
 
 		return ifaceVrrpReturn, nil
-	case "REMOVE":
+	case REMOVE:
 		uriString := "/remove_iface_vrrp/" + ifaceVrrpReq.Iface + "/"
-		statuscode, body, err := client.newRequest(uriString, ifaceVrrpReq)
+		statuscode, body, err := client.newRequest(ctx, uriString, ifaceVrrpReq)
 		if err != nil {
 			return ifaceVrrpReturn, err
 		}
@@ -184,9 +194,9 @@ func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp
 		}
 
 		return ifaceVrrpReturn, nil
-	case "CHECK":
+	case CHECK:
 		uriString := "/check_iface_vrrp/" + ifaceVrrpReq.Iface + "/"
-		statuscode, body, err := client.newRequest(uriString, ifaceVrrpReq)
+		statuscode, body, err := client.newRequest(ctx, uriString, ifaceVrrpReq)
 		if err != nil {
 			return ifaceVrrpReturn, err
 		}
@@ -205,9 +215,9 @@ func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp
 		}
 
 		return ifaceVrrpReturn, nil
-	case "CHANGE":
+	case CHANGE:
 		uriString := "/change_iface_vrrp/" + ifaceVrrpReq.Iface + "/"
-		statuscode, body, err := client.newRequest(uriString, ifaceVrrpReq)
+		statuscode, body, err := client.newRequest(ctx, uriString, ifaceVrrpReq)
 		if err != nil {
 			return ifaceVrrpReturn, err
 		}
@@ -225,9 +235,9 @@ func (client *Client) requestAPIIFaceVrrp(action string, ifaceVrrpReq *ifaceVrrp
 }
 
 // requestAPIMove : call /moveid_iface_vrrp/ on api.
-func (client *Client) requestAPIIFaceVrrpMove(ifaceVrrpReq *ifaceVrrp, oldID int) error {
+func (client *Client) requestAPIIFaceVrrpMove(ctx context.Context, ifaceVrrpReq *ifaceVrrp, oldID int) error {
 	uriString := "/moveid_iface_vrrp/" + ifaceVrrpReq.Iface + "/" + strconv.Itoa(oldID) + "/"
-	statuscode, body, err := client.newRequest(uriString, ifaceVrrpReq)
+	statuscode, body, err := client.newRequest(ctx, uriString, ifaceVrrpReq)
 	if err != nil {
 		return err
 	}
@@ -242,12 +252,14 @@ func (client *Client) requestAPIIFaceVrrpMove(ifaceVrrpReq *ifaceVrrp, oldID int
 }
 
 // requestAPIVrrpScript : prepare request to API for resource vrpp_script and call api with newRequest().
-func (client *Client) requestAPIVrrpScript(action string, vrrpScriptReq *vrrpScript) (vrrpScript, error) {
+func (client *Client) requestAPIVrrpScript(
+	ctx context.Context, act action, vrrpScriptReq *vrrpScript,
+) (vrrpScript, error) {
 	var vrrpScriptReturn vrrpScript
-	switch action {
-	case "ADD":
+	switch act {
+	case ADD:
 		uriString := "/add_vrrp_script/" + vrrpScriptReq.Name + "/"
-		statuscode, body, err := client.newRequest(uriString, vrrpScriptReq)
+		statuscode, body, err := client.newRequest(ctx, uriString, vrrpScriptReq)
 		if err != nil {
 			return vrrpScriptReturn, err
 		}
@@ -259,9 +271,9 @@ func (client *Client) requestAPIVrrpScript(action string, vrrpScriptReq *vrrpScr
 		}
 
 		return vrrpScriptReturn, nil
-	case "REMOVE":
+	case REMOVE:
 		uriString := "/remove_vrrp_script/" + vrrpScriptReq.Name + "/"
-		statuscode, body, err := client.newRequest(uriString, vrrpScriptReq)
+		statuscode, body, err := client.newRequest(ctx, uriString, vrrpScriptReq)
 		if err != nil {
 			return vrrpScriptReturn, err
 		}
@@ -273,9 +285,9 @@ func (client *Client) requestAPIVrrpScript(action string, vrrpScriptReq *vrrpScr
 		}
 
 		return vrrpScriptReturn, nil
-	case "CHECK":
+	case CHECK:
 		uriString := "/check_vrrp_script/" + vrrpScriptReq.Name + "/"
-		statuscode, body, err := client.newRequest(uriString, vrrpScriptReq)
+		statuscode, body, err := client.newRequest(ctx, uriString, vrrpScriptReq)
 		if err != nil {
 			return vrrpScriptReturn, err
 		}
@@ -294,9 +306,9 @@ func (client *Client) requestAPIVrrpScript(action string, vrrpScriptReq *vrrpScr
 		}
 
 		return vrrpScriptReturn, nil
-	case "CHANGE":
+	case CHANGE:
 		uriString := "/change_vrrp_script/" + vrrpScriptReq.Name + "/"
-		statuscode, body, err := client.newRequest(uriString, vrrpScriptReq)
+		statuscode, body, err := client.newRequest(ctx, uriString, vrrpScriptReq)
 		if err != nil {
 			return vrrpScriptReturn, err
 		}
