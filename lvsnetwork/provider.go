@@ -1,11 +1,10 @@
 package lvsnetwork
 
 import (
-	"fmt"
 	"os"
 
-	"github.com/hashicorp/terraform/helper/schema"
-	"github.com/hashicorp/terraform/terraform"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -14,7 +13,7 @@ const (
 )
 
 // Provider lvsnetwork for terraform.
-func Provider() terraform.ResourceProvider {
+func Provider() *schema.Provider {
 	return &schema.Provider{
 		Schema: map[string]*schema.Schema{
 			"firewall_ip": {
@@ -59,40 +58,32 @@ func Provider() terraform.ResourceProvider {
 				Optional: true,
 				Default:  "",
 			},
-			"default_id_vrrp": {
-				Type:     schema.TypeInt,
-				Required: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 1 || value > 255 {
-						errors = append(errors, fmt.Errorf("%q must be in the range from 1 to 255", k))
-					}
-
-					return
-				},
-			},
-			"default_vrrp_group": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Default:  "VG_1",
-			},
 			"default_advert_int": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Default:  defaultAdvertInt,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 1 || value > 10 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 10", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Default:      defaultAdvertInt,
+				ValidateFunc: validation.IntBetween(1, 10),
+			},
+			"default_auth_pass": {
+				Type:         schema.TypeString,
+				Optional:     true,
+				Default:      "word",
+				ValidateFunc: validation.StringLenBetween(1, 7),
+			},
+			"default_id_vrrp": {
+				Type:         schema.TypeInt,
+				Required:     true,
+				ValidateFunc: validation.IntBetween(1, 255),
 			},
 			"default_track_script": {
 				Type:     schema.TypeList,
 				Optional: true,
 				Elem:     &schema.Schema{Type: schema.TypeString},
+			},
+			"default_vrrp_group": {
+				Type:     schema.TypeString,
+				Optional: true,
+				Default:  "VG_1",
 			},
 		},
 		ResourcesMap: map[string]*schema.Resource{
@@ -120,10 +111,11 @@ func configureProvider(d *schema.ResourceData) (interface{}, error) {
 		vaultPath:          d.Get("vault_path").(string),
 		vaultKey:           d.Get("vault_key").(string),
 		defaultIDVrrp:      d.Get("default_id_vrrp").(int),
+		defaultAuthPass:    d.Get("default_auth_pass").(string),
 		defaultVrrpGroup:   d.Get("default_vrrp_group").(string),
 		defaultAdvertInt:   d.Get("default_advert_int").(int),
 		defaultTrackScript: defaultTrackScript,
 	}
 
-	return config.Client()
+	return config.Client(), nil
 }

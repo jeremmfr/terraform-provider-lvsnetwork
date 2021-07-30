@@ -1,24 +1,23 @@
 package lvsnetwork
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"strconv"
 	"strings"
 
-	"github.com/hashicorp/terraform/helper/schema"
-)
-
-const (
-	maxLengthAuthPass = 8
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 func resourceIfaceVrrp() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceIfaceVrrpCreate,
-		Read:   resourceIfaceVrrpRead,
-		Update: resourceIfaceVrrpUpdate,
-		Delete: resourceIfaceVrrpDelete,
+		CreateContext: resourceIfaceVrrpCreate,
+		ReadContext:   resourceIfaceVrrpRead,
+		UpdateContext: resourceIfaceVrrpUpdate,
+		DeleteContext: resourceIfaceVrrpDelete,
 
 		Schema: map[string]*schema.Schema{
 			"iface": {
@@ -36,71 +35,34 @@ func resourceIfaceVrrp() *schema.Resource {
 				Optional: true,
 			},
 			"ip_master": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					testInput := net.ParseIP(value)
-					if testInput.To16() == nil {
-						errors = append(errors, fmt.Errorf("[ERROR] %q %v isn't an IPv4 or IPv6", k, value))
-					}
-
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPAddress,
 			},
 			"ip_slave": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					testInput := net.ParseIP(value)
-					if testInput.To16() == nil {
-						errors = append(errors, fmt.Errorf("[ERROR] %q %v isn't an IPv4 or IPv6", k, value))
-					}
-
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPAddress,
 			},
 			"mask": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 8 || value > 127 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 8 to 127", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IntBetween(8, 127),
 			},
 			"prio_master": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 1 || value > 255 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 255", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(1, 255),
 			},
 			"prio_slave": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 1 || value > 255 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 255", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(1, 255),
 			},
 			"vlan_device": {
 				Type:     schema.TypeString,
@@ -118,43 +80,22 @@ func resourceIfaceVrrp() *schema.Resource {
 				Optional: true,
 			},
 			"id_vrrp": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 1 || value > 255 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 255", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(1, 255),
 			},
 			"auth_type": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if value != "PASS" && value != "AH" {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be PASS or AH", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringInSlice([]string{"PASS", "AH"}, false),
 			},
 			"auth_pass": {
-				Type:     schema.TypeString,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					if strings.Count(value, "") > maxLengthAuthPass {
-						errors = append(errors, fmt.Errorf("[ERROR] %q %v too long", k, value))
-					}
-
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.StringLenBetween(1, 7),
 			},
 			"post_up": {
 				Type:     schema.TypeList,
@@ -162,18 +103,10 @@ func resourceIfaceVrrp() *schema.Resource {
 				Elem:     &schema.Schema{Type: schema.TypeString},
 			},
 			"default_gw": {
-				Type:     schema.TypeString,
-				Optional: true,
-				ForceNew: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(string)
-					testInput := net.ParseIP(value)
-					if testInput.To16() == nil {
-						errors = append(errors, fmt.Errorf("[ERROR] %q %v isn't an IPv4 or IPv6", k, value))
-					}
-
-					return
-				},
+				Type:         schema.TypeString,
+				Optional:     true,
+				ForceNew:     true,
+				ValidateFunc: validation.IsIPAddress,
 			},
 			"lacp_slaves": {
 				Type:     schema.TypeString,
@@ -191,43 +124,22 @@ func resourceIfaceVrrp() *schema.Resource {
 				Optional: true,
 			},
 			"garp_m_delay": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 1 || value > 10 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 10", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(1, 10),
 			},
 			"advert_int": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 1 || value > 10 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 1 to 10", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(1, 10),
 			},
 			"garp_master_refresh": {
-				Type:     schema.TypeInt,
-				Optional: true,
-				Computed: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value < 10 || value > 300 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be in the range from 10 to 300", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Optional:     true,
+				Computed:     true,
+				ValidateFunc: validation.IntBetween(10, 300),
 			},
 			"use_vmac": {
 				Type:     schema.TypeBool,
@@ -244,12 +156,12 @@ func resourceIfaceVrrp() *schema.Resource {
 	}
 }
 
-func resourceIfaceVrrpCreate(d *schema.ResourceData, m interface{}) error {
+func resourceIfaceVrrpCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*Client)
 	if len(d.Get("ip_vip").([]interface{})) != 0 {
 		err := validateIPList(d)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		setVrrpConfig(d, m)
 	} else if tfErr := d.Set("track_script", []string{}); tfErr != nil {
@@ -270,20 +182,20 @@ func resourceIfaceVrrpCreate(d *schema.ResourceData, m interface{}) error {
 		}
 		if len(d.Get("ip_vip").([]interface{})) != 0 {
 			if d.Get("ip_master").(string) == "" {
-				return fmt.Errorf("[ERROR] IP_vip_only = false so ip_master missing")
+				return diag.FromErr(fmt.Errorf("[ERROR] IP_vip_only = false so ip_master missing"))
 			}
 			if d.Get("ip_slave").(string) == "" {
-				return fmt.Errorf("[ERROR] IP_vip_only = false so ip_slave missing")
+				return diag.FromErr(fmt.Errorf("[ERROR] IP_vip_only = false so ip_slave missing"))
 			}
 			if d.Get("mask").(int) == 0 {
-				return fmt.Errorf("[ERROR] IP_vip_only = false so mask missing")
+				return diag.FromErr(fmt.Errorf("[ERROR] IP_vip_only = false so mask missing"))
 			}
 		}
 	}
 	IfaceVrrp := createStrucIfaceVrrp(d)
-	_, err := client.requestAPIIFaceVrrp("ADD", &IfaceVrrp)
+	_, err := client.requestAPIIFaceVrrp(ctx, ADD, &IfaceVrrp)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if len(d.Get("ip_vip").([]interface{})) == 0 {
 		d.SetId(d.Get("iface").(string) + "_0")
@@ -294,12 +206,12 @@ func resourceIfaceVrrpCreate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceIfaceVrrpRead(d *schema.ResourceData, m interface{}) error {
+func resourceIfaceVrrpRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*Client)
 	IfaceVrrp := createStrucIfaceVrrp(d)
-	IfaceVrrpRead, err := client.requestAPIIFaceVrrp("CHECK", &IfaceVrrp)
+	IfaceVrrpRead, err := client.requestAPIIFaceVrrp(ctx, CHECK, &IfaceVrrp)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if IfaceVrrpRead.Iface == "null" {
 		d.SetId("")
@@ -459,13 +371,13 @@ func resourceIfaceVrrpRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceIfaceVrrpUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*Client)
 	d.Partial(true)
 	if len(d.Get("ip_vip").([]interface{})) != 0 {
 		err := validateIPList(d)
 		if err != nil {
-			return err
+			return diag.FromErr(err)
 		}
 		setVrrpConfig(d, m)
 	}
@@ -478,13 +390,13 @@ func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
 				}
 			}
 			if d.Get("ip_master").(string) == "" {
-				return fmt.Errorf("[ERROR] ip_vip_only = false so ip_master missing")
+				return diag.FromErr(fmt.Errorf("[ERROR] ip_vip_only = false so ip_master missing"))
 			}
 			if d.Get("ip_slave").(string) == "" {
-				return fmt.Errorf("[ERROR] ip_vip_only = false so ip_slave missing")
+				return diag.FromErr(fmt.Errorf("[ERROR] ip_vip_only = false so ip_slave missing"))
 			}
 			if d.Get("mask").(int) == 0 {
-				return fmt.Errorf("[ERROR] IP_vip_only = false so mask missing")
+				return diag.FromErr(fmt.Errorf("[ERROR] IP_vip_only = false so mask missing"))
 			}
 		} else {
 			tfErr := d.Set("ip_master", "")
@@ -540,23 +452,22 @@ func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
 	if (len(d.Get("ip_vip").([]interface{})) != 0) && (d.HasChange("id_vrrp") || d.HasChange("iface_vrrp")) {
 		oldID, newID := d.GetChange("id_vrrp")
 		if oldID.(int) != 0 {
-			err := client.requestAPIIFaceVrrpMove(&IfaceVrrp, oldID.(int))
+			err := client.requestAPIIFaceVrrpMove(ctx, &IfaceVrrp, oldID.(int))
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		} else {
-			err := client.requestAPIIFaceVrrpMove(&IfaceVrrp, newID.(int))
+			err := client.requestAPIIFaceVrrpMove(ctx, &IfaceVrrp, newID.(int))
 			if err != nil {
-				return err
+				return diag.FromErr(err)
 			}
 		}
 		d.SetId(d.Get("iface").(string) + "_" + strconv.Itoa(d.Get("id_vrrp").(int)))
-		d.SetPartial("id_vrrp")
-		d.SetPartial("sync_iface")
+		d.Partial(false)
 	}
-	_, err := client.requestAPIIFaceVrrp("CHANGE", &IfaceVrrp)
+	_, err := client.requestAPIIFaceVrrp(ctx, CHANGE, &IfaceVrrp)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if len(d.Get("ip_vip").([]interface{})) == 0 {
 		tfErr := d.Set("id_vrrp", 0)
@@ -606,12 +517,12 @@ func resourceIfaceVrrpUpdate(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceIfaceVrrpDelete(d *schema.ResourceData, m interface{}) error {
+func resourceIfaceVrrpDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*Client)
 	IfaceVrrp := createStrucIfaceVrrp(d)
-	_, err := client.requestAPIIFaceVrrp("REMOVE", &IfaceVrrp)
+	_, err := client.requestAPIIFaceVrrp(ctx, REMOVE, &IfaceVrrp)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
@@ -723,7 +634,7 @@ func setVrrpConfig(d *schema.ResourceData, m interface{}) {
 		}
 	}
 	if d.Get("auth_pass").(string) == "" {
-		tfErr := d.Set("auth_pass", "word")
+		tfErr := d.Set("auth_pass", client.getDefaultAuthPass())
 		if tfErr != nil {
 			panic(tfErr)
 		}

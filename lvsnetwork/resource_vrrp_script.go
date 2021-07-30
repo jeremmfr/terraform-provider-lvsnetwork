@@ -1,9 +1,11 @@
 package lvsnetwork
 
 import (
-	"fmt"
+	"context"
 
-	"github.com/hashicorp/terraform/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/diag"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/schema"
+	"github.com/hashicorp/terraform-plugin-sdk/v2/helper/validation"
 )
 
 const (
@@ -13,10 +15,10 @@ const (
 
 func resourceVrrpScript() *schema.Resource {
 	return &schema.Resource{
-		Create: resourceVrrpScriptCreate,
-		Read:   resourceVrrpScriptRead,
-		Update: resourceVrrpScriptUpdate,
-		Delete: resourceVrrpScriptDelete,
+		CreateContext: resourceVrrpScriptCreate,
+		ReadContext:   resourceVrrpScriptRead,
+		UpdateContext: resourceVrrpScriptUpdate,
+		DeleteContext: resourceVrrpScriptDelete,
 
 		Schema: map[string]*schema.Schema{
 			"name": {
@@ -45,30 +47,16 @@ func resourceVrrpScript() *schema.Resource {
 				Optional: true,
 			},
 			"rise": {
-				Type:     schema.TypeInt,
-				Default:  defaultVrrpScriptRise,
-				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value <= 0 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be positive integer", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Default:      defaultVrrpScriptRise,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"fall": {
-				Type:     schema.TypeInt,
-				Default:  defaultVrrpScriptFall,
-				Optional: true,
-				ValidateFunc: func(v interface{}, k string) (ws []string, errors []error) {
-					value := v.(int)
-					if value <= 0 {
-						errors = append(errors, fmt.Errorf("[ERROR] %q must be positive integer", k))
-					}
-
-					return
-				},
+				Type:         schema.TypeInt,
+				Default:      defaultVrrpScriptFall,
+				Optional:     true,
+				ValidateFunc: validation.IntAtLeast(1),
 			},
 			"user": {
 				Type:     schema.TypeString,
@@ -82,24 +70,24 @@ func resourceVrrpScript() *schema.Resource {
 	}
 }
 
-func resourceVrrpScriptCreate(d *schema.ResourceData, m interface{}) error {
+func resourceVrrpScriptCreate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*Client)
 	vrrpScript := createStrucVrrpScript(d)
-	_, err := client.requestAPIVrrpScript("ADD", &vrrpScript)
+	_, err := client.requestAPIVrrpScript(ctx, ADD, &vrrpScript)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.SetId(d.Get("name").(string))
 
-	return resourceVrrpScriptRead(d, m)
+	return resourceVrrpScriptRead(ctx, d, m)
 }
 
-func resourceVrrpScriptRead(d *schema.ResourceData, m interface{}) error {
+func resourceVrrpScriptRead(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*Client)
 	vrrpScript := createStrucVrrpScript(d)
-	vrrpScriptRead, err := client.requestAPIVrrpScript("CHECK", &vrrpScript)
+	vrrpScriptRead, err := client.requestAPIVrrpScript(ctx, CHECK, &vrrpScript)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	if vrrpScriptRead.Name == "" {
 		d.SetId("")
@@ -144,25 +132,25 @@ func resourceVrrpScriptRead(d *schema.ResourceData, m interface{}) error {
 	return nil
 }
 
-func resourceVrrpScriptUpdate(d *schema.ResourceData, m interface{}) error {
+func resourceVrrpScriptUpdate(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*Client)
 	d.Partial(true)
 	vrrpScript := createStrucVrrpScript(d)
-	_, err := client.requestAPIVrrpScript("CHANGE", &vrrpScript)
+	_, err := client.requestAPIVrrpScript(ctx, CHANGE, &vrrpScript)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 	d.Partial(false)
 
-	return resourceVrrpScriptRead(d, m)
+	return resourceVrrpScriptRead(ctx, d, m)
 }
 
-func resourceVrrpScriptDelete(d *schema.ResourceData, m interface{}) error {
+func resourceVrrpScriptDelete(ctx context.Context, d *schema.ResourceData, m interface{}) diag.Diagnostics {
 	client := m.(*Client)
 	vrrpScript := createStrucVrrpScript(d)
-	_, err := client.requestAPIVrrpScript("REMOVE", &vrrpScript)
+	_, err := client.requestAPIVrrpScript(ctx, REMOVE, &vrrpScript)
 	if err != nil {
-		return err
+		return diag.FromErr(err)
 	}
 
 	return nil
