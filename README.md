@@ -6,7 +6,7 @@
 [![Lint Status](https://github.com/jeremmfr/terraform-provider-lvsnetwork/workflows/GolangCI-Lint/badge.svg)](https://github.com/jeremmfr/terraform-provider-lvsnetwork/actions)
 [![Go Report Card](https://goreportcard.com/badge/github.com/jeremmfr/terraform-provider-lvsnetwork)](https://goreportcard.com/report/github.com/jeremmfr/terraform-provider-lvsnetwork)
 
-Terraform's provider for setup network interface and keepalived vrrp_instance on two server (master/slave) with [lvsnetwork-api](https://github.com/jeremmfr/lvsnetwork-api)
+Terraform's provider to setup network interface and keepalived vrrp_instance on two server (master/slave) with [lvsnetwork-api](https://github.com/jeremmfr/lvsnetwork-api)
 
 ## Automatic install (Terraform 0.13 and later)
 
