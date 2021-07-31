@@ -1,6 +1,6 @@
 # lvsnetwork Provider
 
-Terraform's provider for setup network interface and keepalived vrrp_instance on two server (master/slave) with [lvsnetwork-api](https://github.com/jeremmfr/lvsnetwork-api)
+Terraform's provider to setup network interface and keepalived vrrp_instance on two server (master/slave) with [lvsnetwork-api](https://github.com/jeremmfr/lvsnetwork-api)
 
 ~> Apply or change can be long because sleep between ifup or keepalived reload
 
